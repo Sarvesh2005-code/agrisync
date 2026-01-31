@@ -1,0 +1,34 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "error": "Something went wrong",
+        "save": "Save",
+        "cancel": "Cancel",
+        "submit": "Submit"
+    },
+    "nav": {
+        "home": "Home",
+        "crop": "My Crops",
+        "soil": "Soil Info",
+        "disease": "Heal",
+        "insights": "48h Insights",
+        "settings": "Settings"
+    },
+    "home": {
+        "welcome": "Welcome back",
+        "weather": "Current Weather"
+    },
+    "disease": {
+        "take_photo": "Take Photo",
+        "upload_gallery": "Upload from Gallery",
+        "analyzing": "Analyzing crop health...",
+        "no_issues": "No diseases detected. Your crop looks healthy!",
+        "detected": "Disease Detected"
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "offline_mode": "Offline Mode",
+        "profile": "Profile"
+    }
+}
