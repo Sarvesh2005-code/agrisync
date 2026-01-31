@@ -16,7 +16,10 @@
     },
     "home": {
         "welcome": "Welcome back",
-        "weather": "Current Weather"
+        "weather": "Current Weather",
+        "alerts_title": "Urgent Alerts",
+        "no_alerts": "No urgent alerts. Good job!",
+        "view_all": "View All"
     },
     "disease": {
         "take_photo": "Take Photo",
