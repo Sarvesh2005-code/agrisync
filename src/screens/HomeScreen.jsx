@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, FlatList } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { RegionDetectionEngine } from '../engines/regionDetectionEngine';
 import { Insight48hEngine } from '../engines/insight48hEngine';
+import { NotificationEngine } from '../engines/notificationEngine';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -12,6 +13,8 @@ const HomeScreen = () => {
     const [region, setRegion] = useState(null);
     const [alerts, setAlerts] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
+    const [notifVisible, setNotifVisible] = useState(false);
+    const [notifications, setNotifications] = useState([]);
 
     useEffect(() => {
         loadData();
@@ -19,18 +22,26 @@ const HomeScreen = () => {
 
     const loadData = async () => {
         setRefreshing(true);
-        const detected = await RegionDetectionEngine.detectRegion();
-        setRegion(detected);
+        try {
+            const detected = await RegionDetectionEngine.detectRegion();
+            setRegion(detected);
 
-        // Load 48h insights (Mock crops for now, or fetch from DB)
-        const DEMO_CROPS = [
-            { name: 'wheat', sowingDate: '2023-11-01', stage: 'Early Stage' },
-            { name: 'sugarcane', sowingDate: '2023-01-01', stage: 'Mature' }
-        ];
-        const generatedInsights = await Insight48hEngine.generateInsights(DEMO_CROPS);
-        // Filter for high/medium severity only for home dash
-        setAlerts(generatedInsights.slice(0, 3));
-        setRefreshing(false);
+            // Load 48h insights (Mock crops for now, or fetch from DB)
+            const DEMO_CROPS = [
+                { name: 'wheat', sowingDate: '2023-11-01', stage: 'Early Stage' },
+                { name: 'sugarcane', sowingDate: '2023-01-01', stage: 'Mature' }
+            ];
+            const generatedInsights = await Insight48hEngine.generateInsights(DEMO_CROPS);
+            setAlerts(generatedInsights.slice(0, 3));
+
+            // Load notifications
+            const notifs = await NotificationEngine.getRecents();
+            setNotifications(notifs);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setRefreshing(false);
+        }
     };
 
     const getSeverityIcon = (severity) => {
@@ -41,6 +52,23 @@ const HomeScreen = () => {
         return severity === 'high' ? '#d32f2f' : '#f57c00';
     };
 
+    const renderNotificationItem = ({ item }) => (
+        <View style={styles.notifItem}>
+            <View style={[styles.notifIcon, { backgroundColor: item.type === 'weather' ? '#e3f2fd' : '#fff3e0' }]}>
+                <Ionicons
+                    name={item.type === 'weather' ? 'rainy' : item.type === 'market' ? 'trending-up' : 'warning'}
+                    size={20}
+                    color={item.type === 'weather' ? '#1976d2' : '#e65100'}
+                />
+            </View>
+            <View style={{ flex: 1 }}>
+                <Text style={styles.notifTitle}>{item.title}</Text>
+                <Text style={styles.notifBody}>{item.body}</Text>
+                <Text style={styles.notifTime}>{item.timestamp}</Text>
+            </View>
+        </View>
+    );
+
     return (
         <ScrollView
             style={styles.container}
@@ -48,9 +76,15 @@ const HomeScreen = () => {
         >
             {/* Header */}
             <View style={styles.header}>
-                <View style={styles.branding}>
-                    <Text style={styles.appName}>AgriSync</Text>
-                    <View style={styles.badge}><Text style={styles.badgeText}>BETA</Text></View>
+                <View style={styles.headerTop}>
+                    <View style={styles.branding}>
+                        <Text style={styles.appName}>AgriSync</Text>
+                        <View style={styles.badge}><Text style={styles.badgeText}>BETA</Text></View>
+                    </View>
+                    <TouchableOpacity onPress={() => setNotifVisible(true)} style={styles.bellBtn}>
+                        <Ionicons name="notifications" size={24} color="#fff" />
+                        <View style={styles.redDot} />
+                    </TouchableOpacity>
                 </View>
                 <View>
                     <Text style={styles.greeting}>{t('home.welcome')}</Text>
@@ -104,6 +138,31 @@ const HomeScreen = () => {
             )}
 
             <View style={{ height: 20 }} />
+
+            {/* Notifications Modal */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={notifVisible}
+                onRequestClose={() => setNotifVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.notifModal}>
+                        <View style={styles.notifHeader}>
+                            <Text style={styles.notifHeaderTitle}>Notifications</Text>
+                            <TouchableOpacity onPress={() => setNotifVisible(false)}>
+                                <Ionicons name="close" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+                        <FlatList
+                            data={notifications}
+                            keyExtractor={(item, index) => index.toString()}
+                            renderItem={renderNotificationItem}
+                            ListEmptyComponent={<Text style={styles.noNotifs}>No new notifications</Text>}
+                        />
+                    </View>
+                </View>
+            </Modal>
         </ScrollView>
     );
 };
@@ -121,10 +180,15 @@ const styles = StyleSheet.create({
         paddingTop: 50,
         paddingBottom: 40,
     },
+    headerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
     branding: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
     },
     appName: {
         color: '#fff',
@@ -143,6 +207,21 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 10,
         fontWeight: 'bold',
+    },
+    bellBtn: {
+        position: 'relative',
+        padding: 5,
+    },
+    redDot: {
+        position: 'absolute',
+        top: 5,
+        right: 5,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#ff1744',
+        borderWidth: 1,
+        borderColor: '#2e7d32',
     },
     greeting: {
         color: 'rgba(255,255,255,0.8)',
@@ -261,6 +340,67 @@ const styles = StyleSheet.create({
         marginTop: 10,
         color: '#666',
         fontSize: 16,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    notifModal: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        height: '70%',
+        padding: 20,
+    },
+    notifHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        paddingBottom: 15,
+    },
+    notifHeaderTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    notifItem: {
+        flexDirection: 'row',
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f5f5f5',
+    },
+    notifIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    notifTitle: {
+        fontWeight: 'bold',
+        fontSize: 16,
+        color: '#333',
+        marginBottom: 4,
+    },
+    notifBody: {
+        color: '#666',
+        fontSize: 14,
+        lineHeight: 20,
+    },
+    notifTime: {
+        color: '#999',
+        fontSize: 12,
+        marginTop: 5,
+    },
+    noNotifs: {
+        textAlign: 'center',
+        marginTop: 50,
+        color: '#999',
     }
 });
 
