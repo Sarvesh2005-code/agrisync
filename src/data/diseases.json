@@ -1,0 +1,42 @@
+{
+    "wheat": [
+        {
+            "name": "Rust",
+            "symptoms": [
+                "orange_pustules",
+                "leaf_yellowing"
+            ],
+            "treatment": "Apply fungicides like Propiconazole.",
+            "visual_features": [
+                "orange_spots",
+                "yellow_halo"
+            ]
+        },
+        {
+            "name": "Leaf Blight",
+            "symptoms": [
+                "brown_lesions",
+                "drying_tips"
+            ],
+            "treatment": "Use Mancozeb spray.",
+            "visual_features": [
+                "brown_streaks",
+                "tip_drying"
+            ]
+        }
+    ],
+    "rice": [
+        {
+            "name": "Blast",
+            "symptoms": [
+                "spindle_spots",
+                "gray_center"
+            ],
+            "treatment": "Spray Tricyclazole.",
+            "visual_features": [
+                "diamond_shape_spots",
+                "gray_center"
+            ]
+        }
+    ]
+}

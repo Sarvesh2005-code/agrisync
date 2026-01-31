@@ -1,6 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { SCHEMA } from './schema';
 import { DB_NAME } from '../utils/constants';
+import { seedDatabase } from '../data/seedData';
 
 let dbInstance = null;
 
@@ -22,6 +23,8 @@ export const initDB = async () => {
             console.log(`Creating table: ${tableName}`);
             await db.execAsync(query);
         }
+
+        await seedDatabase();
 
         console.log('Database initialized successfully');
         return true;
