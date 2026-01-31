@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image, ScrollView, Modal } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { CROPS } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,22 +7,46 @@ import { Ionicons } from '@expo/vector-icons';
 const CropScreen = () => {
     const { t } = useTranslation();
     const [myCrops, setMyCrops] = useState([
-        { id: '1', name: 'wheat', sowingDate: '2023-11-01', duration: 120 }
+        {
+            id: '1',
+            name: 'wheat',
+            sowingDate: '2023-11-01',
+            duration: 120,
+            variety: 'Lokwan',
+            soil: 'Black',
+            irrigation: 'Drip'
+        }
     ]);
     const [showAdd, setShowAdd] = useState(false);
+
+    // Form State
     const [newCropName, setNewCropName] = useState('');
+    const [variety, setVariety] = useState('');
+    const [soilType, setSoilType] = useState('');
+    const [irrigation, setIrrigation] = useState('');
+    const [sowingDate, setSowingDate] = useState(new Date().toISOString().split('T')[0]);
 
     const addCrop = () => {
-        if (newCropName) {
+        if (newCropName && variety) {
             setMyCrops([...myCrops, {
                 id: Date.now().toString(),
                 name: newCropName,
-                sowingDate: new Date().toISOString().split('T')[0],
+                sowingDate: sowingDate,
+                variety: variety,
+                soil: soilType || 'Standard',
+                irrigation: irrigation || 'Manual',
                 duration: 120 // Default mock duration
             }]);
-            setNewCropName('');
-            setShowAdd(false);
+            resetForm();
         }
+    };
+
+    const resetForm = () => {
+        setNewCropName('');
+        setVariety('');
+        setSoilType('');
+        setIrrigation('');
+        setShowAdd(false);
     };
 
     const calculateProgress = (sowingDate, duration) => {
@@ -44,8 +68,8 @@ const CropScreen = () => {
                         <Text style={{ fontSize: 24 }}>🌱</Text>
                     </View>
                     <View style={styles.headerInfo}>
-                        <Text style={styles.cropName}>{item.name}</Text>
-                        <Text style={styles.cropDate}>Sown: {item.sowingDate}</Text>
+                        <Text style={styles.cropName}>{item.name} ({item.variety})</Text>
+                        <Text style={styles.cropDate}>Sown: {item.sowingDate} • {item.soil} Soil</Text>
                     </View>
                     <View style={styles.ageBadge}>
                         <Text style={styles.ageText}>Day {diffDays}</Text>
@@ -70,7 +94,7 @@ const CropScreen = () => {
                     </View>
                     <View style={styles.statusItem}>
                         <Ionicons name="water" size={16} color="#03a9f4" />
-                        <Text style={styles.statusText}>Needs Water</Text>
+                        <Text style={styles.statusText}>{item.irrigation} System</Text>
                     </View>
                 </View>
             </View>
@@ -81,32 +105,84 @@ const CropScreen = () => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>{t('nav.crop')}</Text>
-                <TouchableOpacity onPress={() => setShowAdd(!showAdd)} style={styles.addButton}>
-                    <Ionicons name={showAdd ? "close" : "add"} size={30} color="#fff" />
+                <TouchableOpacity onPress={() => setShowAdd(true)} style={styles.addButton}>
+                    <Ionicons name="add" size={30} color="#fff" />
                 </TouchableOpacity>
             </View>
 
-            {showAdd && (
-                <View style={styles.addForm}>
-                    <Text style={styles.label}>Select Crop:</Text>
-                    <View style={styles.chipContainer}>
-                        {CROPS.map(crop => (
-                            <TouchableOpacity
-                                key={crop}
-                                style={[styles.chip, newCropName === crop && styles.chipSelected]}
-                                onPress={() => setNewCropName(crop)}
-                            >
-                                <Text style={[styles.chipText, newCropName === crop && styles.chipTextSelected]}>
-                                    {crop}
-                                </Text>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={showAdd}
+                onRequestClose={resetForm}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.addForm}>
+                        <View style={styles.formHeader}>
+                            <Text style={styles.label}>Add New Crop</Text>
+                            <TouchableOpacity onPress={resetForm}><Ionicons name="close" size={24} color="#333" /></TouchableOpacity>
+                        </View>
+
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <Text style={styles.inputLabel}>Select Crop Name</Text>
+                            <View style={styles.chipContainer}>
+                                {CROPS.map(crop => (
+                                    <TouchableOpacity
+                                        key={crop}
+                                        style={[styles.chip, newCropName === crop && styles.chipSelected]}
+                                        onPress={() => setNewCropName(crop)}
+                                    >
+                                        <Text style={[styles.chipText, newCropName === crop && styles.chipTextSelected]}>
+                                            {crop}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+
+                            <Text style={styles.inputLabel}>Variety (Common/Hybrid)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={variety}
+                                onChangeText={setVariety}
+                                placeholder="e.g. Lokwan, Hybrid 406"
+                            />
+
+                            <Text style={styles.inputLabel}>Sowing Date (YYYY-MM-DD)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={sowingDate}
+                                onChangeText={setSowingDate}
+                                placeholder="YYYY-MM-DD"
+                            />
+
+                            <View style={styles.row}>
+                                <View style={styles.halfInput}>
+                                    <Text style={styles.inputLabel}>Soil Type</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={soilType}
+                                        onChangeText={setSoilType}
+                                        placeholder="e.g. Black"
+                                    />
+                                </View>
+                                <View style={styles.halfInput}>
+                                    <Text style={styles.inputLabel}>Irrigation</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={irrigation}
+                                        onChangeText={setIrrigation}
+                                        placeholder="e.g. Drip"
+                                    />
+                                </View>
+                            </View>
+
+                            <TouchableOpacity style={styles.submitButton} onPress={addCrop}>
+                                <Text style={styles.submitButtonText}>Start Crop Journey</Text>
                             </TouchableOpacity>
-                        ))}
+                        </ScrollView>
                     </View>
-                    <TouchableOpacity style={styles.submitButton} onPress={addCrop}>
-                        <Text style={styles.submitButtonText}>Start Crop Journey</Text>
-                    </TouchableOpacity>
                 </View>
-            )}
+            </Modal>
 
             <FlatList
                 data={myCrops}
@@ -152,21 +228,55 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         elevation: 4,
     },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
     addForm: {
-        padding: 20,
         backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+        height: '80%',
+    },
+    formHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
     },
     label: {
-        fontSize: 16,
-        marginBottom: 10,
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    inputLabel: {
+        fontSize: 14,
         fontWeight: '600',
+        color: '#666',
+        marginBottom: 8,
+        marginTop: 10,
+    },
+    input: {
+        backgroundColor: '#f9f9f9',
+        borderWidth: 1,
+        borderColor: '#eee',
+        borderRadius: 10,
+        padding: 12,
+        fontSize: 16,
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    halfInput: {
+        width: '48%',
     },
     chipContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginBottom: 20,
+        marginBottom: 10,
     },
     chip: {
         paddingHorizontal: 15,
@@ -191,6 +301,8 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         alignItems: 'center',
+        marginTop: 30,
+        marginBottom: 20,
     },
     submitButtonText: {
         color: '#fff',

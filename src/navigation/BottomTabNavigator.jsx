@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import HomeScreen from '../screens/HomeScreen';
 import CropScreen from '../screens/CropScreen';
 import SoilScreen from '../screens/SoilScreen';
-import Insight48hScreen from '../screens/Insight48hScreen';
+import AiAssistantScreen from '../screens/AiAssistantScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
@@ -26,8 +26,8 @@ const BottomTabNavigator = () => {
                         iconName = focused ? 'leaf' : 'leaf-outline';
                     } else if (route.name === 'Soil') {
                         iconName = focused ? 'layers' : 'layers-outline';
-                    } else if (route.name === '48h') {
-                        iconName = focused ? 'time' : 'time-outline';
+                    } else if (route.name === 'AI') {
+                        iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
                     } else if (route.name === 'Settings') {
                         iconName = focused ? 'settings' : 'settings-outline';
                     }
@@ -55,9 +55,9 @@ const BottomTabNavigator = () => {
                 options={{ title: t('nav.soil') }}
             />
             <Tab.Screen
-                name="48h"
-                component={Insight48hScreen}
-                options={{ title: t('nav.insights') }}
+                name="AI"
+                component={AiAssistantScreen}
+                options={{ title: 'AgriSahayak' }}
             />
             <Tab.Screen
                 name="Settings"
