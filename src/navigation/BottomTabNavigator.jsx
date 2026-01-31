@@ -7,6 +7,7 @@ import HomeScreen from '../screens/HomeScreen';
 import CropScreen from '../screens/CropScreen';
 import SoilScreen from '../screens/SoilScreen';
 import AiAssistantScreen from '../screens/AiAssistantScreen';
+import DiseaseScreen from '../screens/DiseaseScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
@@ -63,6 +64,14 @@ const BottomTabNavigator = () => {
                 name="Settings"
                 component={SettingsScreen}
                 options={{ title: t('nav.settings') }}
+            />
+            <Tab.Screen
+                name="Disease"
+                component={DiseaseScreen}
+                options={{
+                    title: 'Plant Clinic',
+                    tabBarButton: () => null // Hide from tab bar
+                }}
             />
         </Tab.Navigator>
     );

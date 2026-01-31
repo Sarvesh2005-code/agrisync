@@ -1,8 +1,26 @@
+/**
+ * notificationEngine.js
+ * 
+ * Purpose: Manage farmer notifications and alerts
+ * Features:
+ * - Crop-specific and general notifications
+ * - Weather alerts, pest warnings, fertilizer reminders
+ * - Mark as read/dismiss functionality
+ * - Persistent storage in AsyncStorage
+ * - Unread count tracking
+ * 
+ * Storage Key: 'notifications_v1'
+ * Data Format: Array of notification objects with id, title, body, type, crop, read, dismissed
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = 'notifications_v1';
 
-// Mocks for initial seed
+/**
+ * Mock notifications for initial app load
+ * These are saved to AsyncStorage on first run
+ */
 const MOCK_ALERTS = [
     { id: '1', title: 'Rain Alert', body: 'Heavy rain expected in your area in 2 hours. Cover harvested crops.', type: 'weather', timestamp: 'Just now', crop: 'all', read: false },
     { id: '2', title: 'Start Sowing', body: 'Temperature is optimal for Wheat sowing today.', type: 'market', timestamp: '1 hour ago', crop: 'wheat', read: false },

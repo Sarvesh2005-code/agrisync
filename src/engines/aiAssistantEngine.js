@@ -1,6 +1,28 @@
+/**
+ * aiAssistantEngine.js
+ * 
+ * Purpose: Offline AI assistant for farming queries
+ * Features:
+ * - Keyword-based query matching
+ * - Multilingual support (EN/HI/MR)
+ * - Crop-specific knowledge (Wheat, Rice, Cotton, etc.)
+ * - Soil health and pest control guidance
+ * - Quick action suggestions
+ * - Simulated voice and image analysis
+ * 
+ * Knowledge Base:
+ * - Crop management (sowing, irrigation, fertilizer)
+ * - Soil health (rotation, testing, organic matter)
+ * - Pest control (IPM, neem oil, chemical options)
+ * - General farming tips
+ */
+
 import { CROPS } from '../utils/constants';
 
-// Offline Knowledge Base
+/**
+ * Offline Knowledge Base for farming queries
+ * Organized by language and topic
+ */
 const KNOWLEDGE_BASE = {
     en: {
         wheat: {
@@ -41,11 +63,19 @@ const KNOWLEDGE_BASE = {
     }
 };
 
-export const AiAssistantEngine = {
+// Delay to simulate AI "thinking"
+const SIMULATE_DELAY = 800;
 
+export const AiAssistantEngine = {
+    /**
+     * Process user query and return relevant farming advice
+     * @param {string} query - User's question
+     * @param {string} lang - Language code (en/hi/mr)
+     * @returns {Promise<string>} - AI response
+     */
     ask: async (query, lang = 'en') => {
-        // simulation delay
-        await new Promise(r => setTimeout(r, 800));
+        // Simulation delay for realistic AI feel
+        await new Promise(r => setTimeout(r, SIMULATE_DELAY));
 
         const q = query.toLowerCase();
         const kb = KNOWLEDGE_BASE[lang] || KNOWLEDGE_BASE['en'];

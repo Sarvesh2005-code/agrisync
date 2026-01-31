@@ -175,7 +175,7 @@ const HomeScreen = () => {
             {/* Quick Actions Grid */}
             <View style={styles.actionsGrid}>
                 {renderQuickAction('leaf-outline', t('nav.crop'), 'Crop')}
-                {renderQuickAction('medkit-outline', t('nav.disease'), 'Home')}
+                {renderQuickAction('medkit-outline', 'Plant Clinic', 'Disease')}
                 {renderQuickAction('layers-outline', t('nav.soil'), 'Soil')}
                 {renderQuickAction('newspaper-outline', 'Tips', 'AI')}
             </View>
