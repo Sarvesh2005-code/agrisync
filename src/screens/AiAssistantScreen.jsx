@@ -19,17 +19,15 @@ const AiAssistantScreen = () => {
     const sendMessage = async (text = inputText, isSystemCmd = false) => {
         if (!text.trim()) return;
 
-        const newMsg = { id: Date.now().toString(), text: isSystemCmd ? '...' : text, sender: 'user', image: isSystemCmd ? 'leaf_mock' : null };
-        if (!isSystemCmd) {
-            setMessages(prev => [...prev, newMsg]);
-        }
+        const newMsg = { id: Date.now().toString(), text: isSystemCmd ? '📷 Image Uploaded' : text, sender: 'user', image: isSystemCmd ? 'leaf_mock' : null };
+        setMessages(prev => [...prev, newMsg]);
         setInputText('');
         setLoading(true);
 
         try {
             const response = await AiAssistantEngine.ask(text, i18n.language);
             const botMsg = { id: (Date.now() + 1).toString(), text: response, sender: 'bot' };
-            setMessages(prev => [...prev, isSystemCmd ? { ...newMsg, text: '📷 Image Uploaded' } : newMsg, botMsg]);
+            setMessages(prev => [...prev, botMsg]);
         } catch (e) {
             console.error(e);
         } finally {

@@ -77,6 +77,89 @@ const SoilScreen = () => {
                             {renderSoilProperty('Moisture', soilInfo?.moisture)}
                         </View>
 
+                        {/* Soil Treatment Section */}
+                        <View style={styles.treatmentCard}>
+                            <View style={styles.treatmentHeader}>
+                                <Ionicons name="flask" size={24} color="#2e7d32" />
+                                <Text style={styles.sectionTitle}>Soil Treatment</Text>
+                            </View>
+
+                            <View style={styles.treatmentItem}>
+                                <Text style={styles.treatmentTitle}>🌿 Organic Amendments</Text>
+                                <Text style={styles.treatmentText}>
+                                    • Add 5-10 tons of farmyard manure per hectare{'\n'}
+                                    • Apply vermicompost for better soil structure{'\n'}
+                                    • Use green manure crops like Sesbania or Dhaincha
+                                </Text>
+                            </View>
+
+                            <View style={styles.treatmentItem}>
+                                <Text style={styles.treatmentTitle}>💊 Chemical Fertilizers</Text>
+                                <Text style={styles.treatmentText}>
+                                    • NPK Ratio: 120:60:40 kg/ha for cereals{'\n'}
+                                    • Apply Urea in split doses{'\n'}
+                                    • Use DAP for phosphorus boost
+                                </Text>
+                            </View>
+
+                            <View style={styles.treatmentItem}>
+                                <Text style={styles.treatmentTitle}>🧪 pH Correction</Text>
+                                <Text style={styles.treatmentText}>
+                                    {soilInfo?.ph?.includes('Acidic')
+                                        ? '• Apply lime (CaCO₃) at 2-5 tons/ha to increase pH\n• Use dolomite for Mg deficiency'
+                                        : '• Apply gypsum to reduce pH if needed\n• Add sulfur for acidification'}
+                                </Text>
+                            </View>
+                        </View>
+
+                        {/* Soil Management Section */}
+                        <View style={styles.managementCard}>
+                            <View style={styles.managementHeader}>
+                                <Ionicons name="settings" size={24} color="#ff6f00" />
+                                <Text style={styles.sectionTitle}>Soil Management</Text>
+                            </View>
+
+                            <View style={styles.managementItem}>
+                                <Ionicons name="sync" size={20} color="#2e7d32" />
+                                <View style={styles.managementContent}>
+                                    <Text style={styles.managementTitle}>Crop Rotation</Text>
+                                    <Text style={styles.managementText}>
+                                        Rotate legumes (pulses) with cereals to fix nitrogen naturally
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.managementItem}>
+                                <Ionicons name="water" size={20} color="#2e7d32" />
+                                <View style={styles.managementContent}>
+                                    <Text style={styles.managementTitle}>Water Management</Text>
+                                    <Text style={styles.managementText}>
+                                        Use drip irrigation to prevent waterlogging and salt buildup
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.managementItem}>
+                                <Ionicons name="leaf" size={20} color="#2e7d32" />
+                                <View style={styles.managementContent}>
+                                    <Text style={styles.managementTitle}>Mulching</Text>
+                                    <Text style={styles.managementText}>
+                                        Apply crop residue or plastic mulch to retain moisture
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.managementItem}>
+                                <Ionicons name="flask-outline" size={20} color="#2e7d32" />
+                                <View style={styles.managementContent}>
+                                    <Text style={styles.managementTitle}>Soil Testing</Text>
+                                    <Text style={styles.managementText}>
+                                        Test soil every 3 years for accurate nutrient management
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+
                         <View style={styles.tipCard}>
                             <Text style={styles.tipTitle}>💡 Soil Tip</Text>
                             <Text style={styles.tipText}>
@@ -262,6 +345,69 @@ const styles = StyleSheet.create({
     closeButtonText: {
         color: '#666',
         fontWeight: 'bold',
+    },
+    treatmentCard: {
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 15,
+        elevation: 2,
+        marginBottom: 20,
+    },
+    treatmentHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
+        gap: 10,
+    },
+    treatmentItem: {
+        marginBottom: 15,
+        paddingBottom: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    treatmentTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 8,
+    },
+    treatmentText: {
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 22,
+    },
+    managementCard: {
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 15,
+        elevation: 2,
+        marginBottom: 20,
+    },
+    managementHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
+        gap: 10,
+    },
+    managementItem: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 15,
+        gap: 12,
+    },
+    managementContent: {
+        flex: 1,
+    },
+    managementTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 4,
+    },
+    managementText: {
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 20,
     }
 });
 

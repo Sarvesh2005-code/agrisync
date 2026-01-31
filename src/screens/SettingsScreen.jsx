@@ -68,62 +68,6 @@ const SettingsScreen = () => {
         Alert.alert('Success', 'Language changed successfully!');
     };
 
-    /**
-     * Export all user data as JSON
-     */
-    const handleExportData = async () => {
-        try {
-            const profile = await AsyncStorage.getItem('user-profile');
-            const crops = await AsyncStorage.getItem('user-crops');
-            const notifications = await AsyncStorage.getItem('notifications_v1');
-
-            const exportData = {
-                profile: profile ? JSON.parse(profile) : null,
-                crops: crops ? JSON.parse(crops) : [],
-                notifications: notifications ? JSON.parse(notifications) : [],
-                exportedAt: new Date().toISOString()
-            };
-
-            // For web: Download as file
-            // For mobile: Share via system share sheet
-            if (typeof window !== 'undefined') {
-                const dataStr = JSON.stringify(exportData, null, 2);
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `agrisync_backup_${Date.now()}.json`;
-                link.click();
-                Alert.alert('Success', 'Data exported successfully!');
-            } else {
-                await Share.share({
-                    message: JSON.stringify(exportData, null, 2),
-                    title: 'AgriSync Backup'
-                });
-            }
-        } catch (e) {
-            Alert.alert('Error', 'Failed to export data');
-        }
-    };
-
-    /**
-     * Clear app cache (notifications only, preserve user data)
-     */
-    const handleClearCache = () => {
-        Alert.alert(
-            'Clear Cache',
-            'This will remove old notifications but keep your crops and profile.',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Clear', onPress: async () => {
-                        await AsyncStorage.removeItem('notifications_v1');
-                        Alert.alert('Success', 'Cache cleared!');
-                    }
-                }
-            ]
-        );
-    };
 
     /**
      * Open external link (helpline, website, etc.)
@@ -197,15 +141,6 @@ const SettingsScreen = () => {
                 }, 'Weather alerts, pest warnings')}
             </View>
 
-            {/* Data Management */}
-            <View style={styles.section}>
-                <Text style={styles.sectionHeader}>💾 Data Management</Text>
-                {renderSettingItem('download-outline', 'Export Data', '', handleExportData, 'Backup your crops and profile')}
-                {renderSettingItem('trash-outline', 'Clear Cache', '', handleClearCache, 'Free up storage space')}
-                {renderSettingItem('cloud-offline-outline', t('settings.offline_mode'), 'Always On', () => {
-                    Alert.alert('Offline Mode', 'AgriSync works 100% offline. No internet required!');
-                }, 'App works without internet')}
-            </View>
 
             {/* Help & Support */}
             <View style={styles.section}>
