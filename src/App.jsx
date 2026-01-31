@@ -26,9 +26,10 @@ export default function App() {
 
     if (!isReady) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#2e7d32" />
-                <Text style={{ marginTop: 10 }}>Initializing AgriSync...</Text>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2e7d32' }}>
+                <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#fff', marginBottom: 20 }}>AgriSync</Text>
+                <ActivityIndicator size="large" color="#fff" />
+                <Text style={{ marginTop: 20, color: 'rgba(255,255,255,0.8)' }}>Empowering Farmers...</Text>
             </View>
         );
     }

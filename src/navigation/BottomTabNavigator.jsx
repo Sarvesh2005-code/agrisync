@@ -36,7 +36,7 @@ const BottomTabNavigator = () => {
                 },
                 tabBarActiveTintColor: '#2e7d32', // Material Green 800
                 tabBarInactiveTintColor: 'gray',
-                headerShown: true,
+                headerShown: false,
             })}
         >
             <Tab.Screen
