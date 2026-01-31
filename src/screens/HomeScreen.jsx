@@ -15,6 +15,13 @@ const HomeScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [notifVisible, setNotifVisible] = useState(false);
     const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    // Mock User Crops (In production, fetch from DB)
+    const DEMO_CROPS = [
+        { name: 'wheat', sowingDate: '2023-11-01', stage: 'Early Stage' },
+        { name: 'sugarcane', sowingDate: '2023-01-01', stage: 'Mature' }
+    ];
 
     useEffect(() => {
         loadData();
@@ -26,17 +33,15 @@ const HomeScreen = () => {
             const detected = await RegionDetectionEngine.detectRegion();
             setRegion(detected);
 
-            // Load 48h insights (Mock crops for now, or fetch from DB)
-            const DEMO_CROPS = [
-                { name: 'wheat', sowingDate: '2023-11-01', stage: 'Early Stage' },
-                { name: 'sugarcane', sowingDate: '2023-01-01', stage: 'Mature' }
-            ];
+            // Load 48h insights
             const generatedInsights = await Insight48hEngine.generateInsights(DEMO_CROPS);
             setAlerts(generatedInsights.slice(0, 3));
 
-            // Load notifications
-            const notifs = await NotificationEngine.getRecents();
+            // Load user-specific notifications
+            const notifs = await NotificationEngine.getRecents(DEMO_CROPS);
             setNotifications(notifs);
+            setUnreadCount(notifs.length);
+
         } catch (e) {
             console.error(e);
         } finally {
@@ -51,6 +56,15 @@ const HomeScreen = () => {
     const getSeverityColor = (severity) => {
         return severity === 'high' ? '#d32f2f' : '#f57c00';
     };
+
+    const renderQuickAction = (icon, label, route) => (
+        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate(route)}>
+            <View style={styles.actionIconBox}>
+                <Ionicons name={icon} size={24} color="#2e7d32" />
+            </View>
+            <Text style={styles.actionLabel}>{label}</Text>
+        </TouchableOpacity>
+    );
 
     const renderNotificationItem = ({ item }) => (
         <View style={styles.notifItem}>
@@ -82,8 +96,12 @@ const HomeScreen = () => {
                         <View style={styles.badge}><Text style={styles.badgeText}>BETA</Text></View>
                     </View>
                     <TouchableOpacity onPress={() => setNotifVisible(true)} style={styles.bellBtn}>
-                        <Ionicons name="notifications" size={24} color="#fff" />
-                        <View style={styles.redDot} />
+                        <Ionicons name="notifications" size={26} color="#fff" />
+                        {unreadCount > 0 && (
+                            <View style={styles.redDot}>
+                                <Text style={styles.dotText}>{unreadCount}</Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
                 </View>
                 <View>
@@ -94,20 +112,44 @@ const HomeScreen = () => {
                 </View>
             </View>
 
-            {/* Weather Card (Mock) */}
+            {/* Weather Card */}
             <View style={styles.card}>
-                <Text style={styles.cardTitle}>{t('home.weather')}</Text>
+                <View style={styles.weatherHeader}>
+                    <Text style={styles.cardTitle}>{t('home.weather')}</Text>
+                    <Ionicons name="sunny" size={24} color="#fbc02d" />
+                </View>
                 <View style={styles.weatherRow}>
                     <Text style={styles.temp}>28°C</Text>
-                    <Text style={styles.desc}>Sunny</Text>
+                    <View>
+                        <Text style={styles.desc}>Sunny</Text>
+                        <Text style={styles.feelsLike}>Feels like 30°C</Text>
+                    </View>
                 </View>
                 <View style={styles.weatherDetails}>
-                    <Text>Humidity: 65%</Text>
-                    <Text>Rain: 0mm</Text>
+                    <Text style={styles.weatherDetailText}><Ionicons name="water-outline" /> 65% Humidity</Text>
+                    <Text style={styles.weatherDetailText}><Ionicons name="umbrella-outline" /> 0mm Rain</Text>
                 </View>
             </View>
 
-            {/* Alerts Section */}
+            {/* Quick Actions Grid */}
+            <View style={styles.actionsGrid}>
+                {renderQuickAction('leaf-outline', t('nav.crop'), 'Crop')}
+                {renderQuickAction('medkit-outline', t('nav.disease'), 'Home')}
+                {renderQuickAction('layers-outline', t('nav.soil'), 'Soil')}
+                {renderQuickAction('newspaper-outline', 'Tips', '48h')}
+            </View>
+
+            {/* Daily Tip */}
+            <View style={styles.tipCard}>
+                <View style={styles.tipHeader}>
+                    <Ionicons name="bulb" size={20} color="#fff" />
+                    <Text style={styles.tipTitle}>Daily Tip</Text>
+                </View>
+                <Text style={styles.tipContent}>
+                    Water your crops early in the morning to minimize evaporation and ensure better absorption.
+                </Text>
+            </View>
+            {/* Alerts Section (Existing) */}
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>{t('home.alerts_title')}</Text>
                 <TouchableOpacity onPress={() => navigation.navigate('48h')}>
@@ -149,7 +191,7 @@ const HomeScreen = () => {
                 <View style={styles.modalOverlay}>
                     <View style={styles.notifModal}>
                         <View style={styles.notifHeader}>
-                            <Text style={styles.notifHeaderTitle}>Notifications</Text>
+                            <Text style={styles.notifHeaderTitle}>Notifications ({unreadCount})</Text>
                             <TouchableOpacity onPress={() => setNotifVisible(false)}>
                                 <Ionicons name="close" size={24} color="#333" />
                             </TouchableOpacity>
@@ -175,16 +217,16 @@ const styles = StyleSheet.create({
     header: {
         padding: 20,
         backgroundColor: '#2e7d32', // Green 800
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
         paddingTop: 50,
-        paddingBottom: 40,
+        paddingBottom: 50,
     },
     headerTop: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 15,
     },
     branding: {
         flexDirection: 'row',
@@ -214,18 +256,25 @@ const styles = StyleSheet.create({
     },
     redDot: {
         position: 'absolute',
-        top: 5,
-        right: 5,
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+        top: -2,
+        right: -2,
+        minWidth: 18,
+        height: 18,
+        borderRadius: 9,
         backgroundColor: '#ff1744',
-        borderWidth: 1,
+        borderWidth: 1.5,
         borderColor: '#2e7d32',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dotText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
     },
     greeting: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 14,
+        color: 'rgba(255,255,255,0.9)',
+        fontSize: 15,
         marginBottom: 2,
     },
     location: {
@@ -235,39 +284,47 @@ const styles = StyleSheet.create({
     },
     card: {
         backgroundColor: 'white',
-        marginHorizontal: 15,
-        marginTop: -30, // Overlap effect
+        marginHorizontal: 20,
+        marginTop: -40,
         padding: 20,
-        borderRadius: 15,
+        borderRadius: 20,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 4,
+        shadowRadius: 8,
+        elevation: 5,
         marginBottom: 20,
+    },
+    weatherHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 10,
     },
     cardTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 10,
-        color: '#666',
+        color: '#555',
         textTransform: 'uppercase',
     },
     weatherRow: {
         flexDirection: 'row',
-        alignItems: 'baseline',
-        marginBottom: 10,
+        alignItems: 'center',
+        marginBottom: 15,
     },
     temp: {
-        fontSize: 48,
+        fontSize: 52,
         fontWeight: 'bold',
-        color: '#2b2b2b',
-        marginRight: 10,
+        color: '#2e7d32',
+        marginRight: 15,
     },
     desc: {
-        fontSize: 18,
-        color: '#666',
-        fontWeight: '500',
+        fontSize: 20,
+        color: '#333',
+        fontWeight: '600',
+    },
+    feelsLike: {
+        color: '#888',
+        fontSize: 14,
     },
     weatherDetails: {
         flexDirection: 'row',
@@ -276,12 +333,71 @@ const styles = StyleSheet.create({
         borderTopColor: '#f0f0f0',
         paddingTop: 15,
     },
+    weatherDetailText: {
+        color: '#555',
+        fontWeight: '500',
+    },
+    actionsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        marginBottom: 20,
+    },
+    actionBtn: {
+        width: '23%',
+        alignItems: 'center',
+    },
+    actionIconBox: {
+        width: 60,
+        height: 60,
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: 2 },
+    },
+    actionLabel: {
+        fontSize: 12,
+        color: '#555',
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    tipCard: {
+        backgroundColor: '#2e7d32',
+        marginHorizontal: 20,
+        borderRadius: 15,
+        padding: 20,
+        marginBottom: 25,
+        overflow: 'hidden',
+    },
+    tipHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    tipTitle: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+        marginLeft: 10,
+    },
+    tipContent: {
+        color: 'rgba(255,255,255,0.9)',
+        fontSize: 15,
+        lineHeight: 22,
+        fontStyle: 'italic',
+    },
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        marginBottom: 10,
+        marginBottom: 15,
     },
     sectionTitle: {
         fontSize: 18,
@@ -294,9 +410,9 @@ const styles = StyleSheet.create({
     },
     alertCard: {
         backgroundColor: '#fff',
-        marginHorizontal: 15,
-        marginBottom: 10,
-        borderRadius: 10,
+        marginHorizontal: 20,
+        marginBottom: 12,
+        borderRadius: 12,
         flexDirection: 'row',
         overflow: 'hidden',
         elevation: 2,
@@ -323,13 +439,13 @@ const styles = StyleSheet.create({
     alertMsg: {
         color: '#333',
         fontSize: 15,
-        lineHeight: 20,
+        lineHeight: 22,
     },
     emptyAlert: {
         backgroundColor: '#fff',
-        marginHorizontal: 15,
+        marginHorizontal: 20,
         padding: 30,
-        borderRadius: 10,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
         borderStyle: 'dashed',
