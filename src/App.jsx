@@ -2,27 +2,40 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomTabNavigator from './navigation/BottomTabNavigator';
+import LoginScreen from './screens/LoginScreen';
+import ErrorBoundary from './components/ErrorBoundary';
 import { initDB } from './db/initDB';
 import './localization/i18n';
 
 export default function App() {
     const [isReady, setIsReady] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-        const initialize = async () => {
-            try {
-                await initDB();
-                // Add artificial delay or other setup calls here
-            } catch (e) {
-                console.warn(e);
-            } finally {
-                setIsReady(true);
-            }
-        };
-
         initialize();
     }, []);
+
+    const initialize = async () => {
+        try {
+            // Initialize database
+            await initDB();
+
+            // Check if user profile exists
+            const profile = await AsyncStorage.getItem('user-profile');
+            setIsAuthenticated(!!profile);
+
+        } catch (e) {
+            console.warn('Initialization error:', e);
+        } finally {
+            setIsReady(true);
+        }
+    };
+
+    const handleLoginSuccess = () => {
+        setIsAuthenticated(true);
+    };
 
     if (!isReady) {
         return (
@@ -34,11 +47,23 @@ export default function App() {
         );
     }
 
+    if (!isAuthenticated) {
+        return (
+            <ErrorBoundary>
+                <SafeAreaProvider>
+                    <LoginScreen onLoginSuccess={handleLoginSuccess} />
+                </SafeAreaProvider>
+            </ErrorBoundary>
+        );
+    }
+
     return (
-        <SafeAreaProvider>
-            <NavigationContainer>
-                <BottomTabNavigator />
-            </NavigationContainer>
-        </SafeAreaProvider>
+        <ErrorBoundary>
+            <SafeAreaProvider>
+                <NavigationContainer>
+                    <BottomTabNavigator />
+                </NavigationContainer>
+            </SafeAreaProvider>
+        </ErrorBoundary>
     );
 }

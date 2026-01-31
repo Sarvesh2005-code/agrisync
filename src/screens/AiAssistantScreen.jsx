@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Image, Alert, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { AiAssistantEngine } from '../engines/aiAssistantEngine';
@@ -312,7 +312,5 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     }
 });
-
-import { ScrollView } from 'react-native';
 
 export default AiAssistantScreen;

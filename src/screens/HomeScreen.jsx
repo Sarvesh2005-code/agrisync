@@ -87,7 +87,11 @@ const HomeScreen = () => {
     };
 
     const renderQuickAction = (icon, label, route) => (
-        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate(route)}>
+        <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => navigation.navigate(route)}
+            accessibilityLabel={`Navigate to ${label}`}
+        >
             <View style={styles.actionIconBox}>
                 <Ionicons name={icon} size={24} color="#2e7d32" />
             </View>
@@ -127,7 +131,12 @@ const HomeScreen = () => {
                         <Text style={styles.appName}>AgriSync</Text>
                         <View style={styles.badge}><Text style={styles.badgeText}>BETA</Text></View>
                     </View>
-                    <TouchableOpacity onPress={() => setNotifVisible(true)} style={styles.bellBtn}>
+                    <TouchableOpacity
+                        onPress={() => setNotifVisible(true)}
+                        style={styles.bellBtn}
+                        accessibilityLabel="View notifications"
+                        accessibilityHint="Opens notification panel"
+                    >
                         <Ionicons name="notifications" size={26} color="#fff" />
                         {unreadCount > 0 && (
                             <View style={styles.redDot}>

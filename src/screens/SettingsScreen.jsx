@@ -96,13 +96,31 @@ const SettingsScreen = () => {
 
             <View style={styles.section}>
                 <Text style={styles.sectionHeader}>Account</Text>
-                {renderSettingItem('log-out-outline', 'Log Out', '', () => {
-                    Alert.alert('Log Out', 'Are you sure?', [
+                {renderSettingItem('log-out-outline', 'Log Out', '', async () => {
+                    Alert.alert('Log Out', 'This will clear all your data and return to login screen. Are you sure?', [
                         { text: 'Cancel', style: 'cancel' },
                         {
-                            text: 'Log Out', style: 'destructive', onPress: () => {
-                                AsyncStorage.removeItem('user-profile');
-                                setUser({ name: 'Guest Farmer', phone: '' });
+                            text: 'Log Out', style: 'destructive', onPress: async () => {
+                                try {
+                                    // Clear all user data
+                                    await AsyncStorage.multiRemove(['user-profile', 'notifications_v1']);
+
+                                    // Show success message
+                                    Alert.alert('Success', 'Logged out successfully. Please restart the app.', [
+                                        {
+                                            text: 'OK', onPress: () => {
+                                                // In React Native, we can't programmatically restart
+                                                // User needs to manually close and reopen
+                                                // For web, we can reload
+                                                if (typeof window !== 'undefined') {
+                                                    window.location.reload();
+                                                }
+                                            }
+                                        }
+                                    ]);
+                                } catch (e) {
+                                    Alert.alert('Error', 'Failed to log out. Please try again.');
+                                }
                             }
                         }
                     ]);

@@ -1,24 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image, ScrollView, Modal, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { CROPS } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 
+const STORAGE_KEY = 'user-crops';
+
 const CropScreen = () => {
     const { t } = useTranslation();
-    const [myCrops, setMyCrops] = useState([
-        {
-            id: '1',
-            name: 'wheat',
-            sowingDate: '2023-11-01',
-            duration: 120,
-            variety: 'Lokwan',
-            soil: 'Black',
-            irrigation: 'Drip',
-            status: 'active'
-        }
-    ]);
+    const [myCrops, setMyCrops] = useState([]);
     const [showAdd, setShowAdd] = useState(false);
+
+    // Load crops on mount
+    useEffect(() => {
+        loadCrops();
+    }, []);
+
+    // Save crops whenever they change
+    useEffect(() => {
+        if (myCrops.length > 0) {
+            saveCrops();
+        }
+    }, [myCrops]);
+
+    const loadCrops = async () => {
+        try {
+            const stored = await AsyncStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                setMyCrops(JSON.parse(stored));
+            }
+        } catch (e) {
+            console.error('Failed to load crops:', e);
+        }
+    };
+
+    const saveCrops = async () => {
+        try {
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(myCrops));
+        } catch (e) {
+            console.error('Failed to save crops:', e);
+        }
+    };
 
     // Form State
     const [newCropName, setNewCropName] = useState('');
