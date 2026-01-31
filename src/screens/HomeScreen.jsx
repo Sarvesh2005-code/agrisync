@@ -48,6 +48,10 @@ const HomeScreen = () => {
         >
             {/* Header */}
             <View style={styles.header}>
+                <View style={styles.branding}>
+                    <Text style={styles.appName}>AgriSync</Text>
+                    <View style={styles.badge}><Text style={styles.badgeText}>BETA</Text></View>
+                </View>
                 <View>
                     <Text style={styles.greeting}>{t('home.welcome')}</Text>
                     <Text style={styles.location}>
@@ -114,12 +118,36 @@ const styles = StyleSheet.create({
         backgroundColor: '#2e7d32', // Green 800
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
-        paddingTop: 60,
+        paddingTop: 50,
+        paddingBottom: 40,
+    },
+    branding: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    appName: {
+        color: '#fff',
+        fontSize: 28,
+        fontWeight: '900',
+        letterSpacing: 1,
+    },
+    badge: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        marginLeft: 8,
+    },
+    badgeText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
     },
     greeting: {
         color: 'rgba(255,255,255,0.8)',
-        fontSize: 16,
-        marginBottom: 4,
+        fontSize: 14,
+        marginBottom: 2,
     },
     location: {
         color: '#fff',
