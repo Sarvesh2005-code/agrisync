@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Image, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { AiAssistantEngine } from '../engines/aiAssistantEngine';
@@ -11,27 +11,58 @@ const AiAssistantScreen = () => {
     ]);
     const [inputText, setInputText] = useState('');
     const [loading, setLoading] = useState(false);
+    const [statusText, setStatusText] = useState('');
     const flatListRef = useRef();
 
     const quickActions = AiAssistantEngine.getQuickActions(i18n.language);
 
-    const sendMessage = async (text = inputText) => {
+    const sendMessage = async (text = inputText, isSystemCmd = false) => {
         if (!text.trim()) return;
 
-        const newMsg = { id: Date.now().toString(), text, sender: 'user' };
-        setMessages(prev => [...prev, newMsg]);
+        const newMsg = { id: Date.now().toString(), text: isSystemCmd ? '...' : text, sender: 'user', image: isSystemCmd ? 'leaf_mock' : null };
+        if (!isSystemCmd) {
+            setMessages(prev => [...prev, newMsg]);
+        }
         setInputText('');
         setLoading(true);
 
         try {
             const response = await AiAssistantEngine.ask(text, i18n.language);
             const botMsg = { id: (Date.now() + 1).toString(), text: response, sender: 'bot' };
-            setMessages(prev => [...prev, botMsg]);
+            setMessages(prev => [...prev, isSystemCmd ? { ...newMsg, text: '📷 Image Uploaded' } : newMsg, botMsg]);
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
+            setStatusText('');
         }
+    };
+
+    const handleVoice = () => {
+        setStatusText('Listening...');
+        setTimeout(() => {
+            setInputText('voice_cmd_soil'); // Mock voice input
+            sendMessage('voice_cmd_soil');
+        }, 1500);
+    };
+
+    const handleCamera = () => {
+        Alert.alert(
+            "Select Image",
+            "Choose a photo of your crop to analyze.",
+            [
+                { text: "Camera", onPress: () => simulateImageAnalysis() },
+                { text: "Gallery", onPress: () => simulateImageAnalysis() },
+                { text: "Cancel", style: "cancel" }
+            ]
+        );
+    };
+
+    const simulateImageAnalysis = () => {
+        setStatusText('Analyzing Image...');
+        setTimeout(() => {
+            sendMessage('analyzing_image_cmd', true);
+        }, 2000);
     };
 
     useEffect(() => {
@@ -46,6 +77,11 @@ const AiAssistantScreen = () => {
                 </View>
             )}
             <View style={[styles.msgBubble, item.sender === 'user' ? styles.bubbleUser : styles.bubbleBot]}>
+                {item.text.includes('📷') && (
+                    <View style={styles.imagePlaceholder}>
+                        <Ionicons name="image" size={40} color="#ccc" />
+                    </View>
+                )}
                 <Text style={[styles.msgText, item.sender === 'user' ? styles.textUser : styles.textBot]}>{item.text}</Text>
             </View>
         </View>
@@ -72,10 +108,10 @@ const AiAssistantScreen = () => {
                 contentContainerStyle={styles.list}
             />
 
-            {loading && (
+            {(loading || statusText) && (
                 <View style={styles.typingIndicator}>
                     <ActivityIndicator size="small" color="#2e7d32" />
-                    <Text style={styles.typingText}>AgriSahayak is thinking...</Text>
+                    <Text style={styles.typingText}>{statusText || 'AgriSahayak is thinking...'}</Text>
                 </View>
             )}
 
@@ -94,17 +130,26 @@ const AiAssistantScreen = () => {
             </View>
 
             <View style={styles.inputArea}>
+                <TouchableOpacity style={styles.mediaBtn} onPress={handleCamera}>
+                    <Ionicons name="camera" size={24} color="#555" />
+                </TouchableOpacity>
                 <TextInput
                     style={styles.input}
                     value={inputText}
                     onChangeText={setInputText}
-                    placeholder="Ask about crop, soil, weather..."
+                    placeholder="Ask AgriSahayak..."
                     placeholderTextColor="#999"
                     onSubmitEditing={() => sendMessage()}
                 />
-                <TouchableOpacity style={styles.sendBtn} onPress={() => sendMessage()}>
-                    <Ionicons name="send" size={20} color="#fff" />
-                </TouchableOpacity>
+                {inputText ? (
+                    <TouchableOpacity style={styles.sendBtn} onPress={() => sendMessage()}>
+                        <Ionicons name="send" size={20} color="#fff" />
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity style={[styles.sendBtn, styles.micBtn]} onPress={handleVoice}>
+                        <Ionicons name="mic" size={24} color="#fff" />
+                    </TouchableOpacity>
+                )}
             </View>
         </KeyboardAvoidingView>
     );
@@ -241,6 +286,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         marginRight: 10,
         color: '#333',
+        marginLeft: 10,
     },
     sendBtn: {
         width: 45,
@@ -250,6 +296,21 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    micBtn: {
+        backgroundColor: '#f57c00',
+    },
+    mediaBtn: {
+        padding: 10,
+    },
+    imagePlaceholder: {
+        width: 150,
+        height: 100,
+        backgroundColor: '#eee',
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 5,
+    }
 });
 
 import { ScrollView } from 'react-native';

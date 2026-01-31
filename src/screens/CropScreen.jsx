@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image, ScrollView, Modal, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { CROPS } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,7 +14,8 @@ const CropScreen = () => {
             duration: 120,
             variety: 'Lokwan',
             soil: 'Black',
-            irrigation: 'Drip'
+            irrigation: 'Drip',
+            status: 'active'
         }
     ]);
     const [showAdd, setShowAdd] = useState(false);
@@ -35,10 +36,28 @@ const CropScreen = () => {
                 variety: variety,
                 soil: soilType || 'Standard',
                 irrigation: irrigation || 'Manual',
-                duration: 120 // Default mock duration
+                duration: 120,
+                status: 'active'
             }]);
             resetForm();
         }
+    };
+
+    const harvestCrop = (id) => {
+        Alert.alert(
+            "Harvest Crop",
+            "Are you sure you want to mark this crop as harvested? It will be moved to history.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Harvest", onPress: () => {
+                        setMyCrops(prev => prev.filter(c => c.id !== id));
+                        // In real app, move to history DB
+                        Alert.alert("Success", "Crop harvested successfully! Soil is now free.");
+                    }
+                }
+            ]
+        );
     };
 
     const resetForm = () => {
@@ -96,6 +115,9 @@ const CropScreen = () => {
                         <Ionicons name="water" size={16} color="#03a9f4" />
                         <Text style={styles.statusText}>{item.irrigation} System</Text>
                     </View>
+                    <TouchableOpacity style={styles.harvestBtn} onPress={() => harvestCrop(item.id)}>
+                        <Text style={styles.harvestText}>Harvest</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         );
@@ -383,6 +405,7 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#f5f5f5',
         paddingTop: 10,
+        alignItems: 'center',
     },
     statusItem: {
         flexDirection: 'row',
@@ -397,6 +420,20 @@ const styles = StyleSheet.create({
         marginLeft: 5,
         fontSize: 12,
         color: '#555',
+    },
+    harvestBtn: {
+        marginLeft: 'auto',
+        backgroundColor: '#fff3e0',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: '#ff9800',
+    },
+    harvestText: {
+        color: '#e65100',
+        fontWeight: 'bold',
+        fontSize: 12,
     },
     emptyState: {
         alignItems: 'center',

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, FlatList, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { RegionDetectionEngine } from '../engines/regionDetectionEngine';
 import { Insight48hEngine } from '../engines/insight48hEngine';
@@ -17,7 +17,7 @@ const HomeScreen = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
-    // Mock User Crops (In production, fetch from DB)
+    // Mock User Crops
     const DEMO_CROPS = [
         { name: 'wheat', sowingDate: '2023-11-01', stage: 'Early Stage' },
         { name: 'sugarcane', sowingDate: '2023-01-01', stage: 'Mature' }
@@ -37,16 +37,45 @@ const HomeScreen = () => {
             const generatedInsights = await Insight48hEngine.generateInsights(DEMO_CROPS);
             setAlerts(generatedInsights.slice(0, 3));
 
-            // Load user-specific notifications
-            const notifs = await NotificationEngine.getRecents(DEMO_CROPS);
-            setNotifications(notifs);
-            setUnreadCount(notifs.length);
+            await refreshNotifications();
 
         } catch (e) {
             console.error(e);
         } finally {
             setRefreshing(false);
         }
+    };
+
+    const refreshNotifications = async () => {
+        const notifs = await NotificationEngine.getRecents(DEMO_CROPS);
+        setNotifications(notifs);
+        const count = await NotificationEngine.getUnreadCount(DEMO_CROPS);
+        setUnreadCount(count);
+    };
+
+    const handleNotificationPress = async (item) => {
+        Alert.alert(
+            item.title,
+            item.body,
+            [
+                { text: 'Later', style: 'cancel' },
+                {
+                    text: 'Got it (Dismiss)', onPress: async () => {
+                        await NotificationEngine.dismiss(item.id);
+                        await refreshNotifications();
+                    }
+                },
+                {
+                    text: 'Mark Read', onPress: async () => {
+                        await NotificationEngine.markAsRead(item.id);
+                        await refreshNotifications();
+                    }
+                }
+            ]
+        );
+        // Auto mark as read on open, if preferred
+        await NotificationEngine.markAsRead(item.id);
+        await refreshNotifications();
     };
 
     const getSeverityIcon = (severity) => {
@@ -67,7 +96,7 @@ const HomeScreen = () => {
     );
 
     const renderNotificationItem = ({ item }) => (
-        <View style={styles.notifItem}>
+        <TouchableOpacity style={styles.notifItem} onPress={() => handleNotificationPress(item)}>
             <View style={[styles.notifIcon, { backgroundColor: item.type === 'weather' ? '#e3f2fd' : '#fff3e0' }]}>
                 <Ionicons
                     name={item.type === 'weather' ? 'rainy' : item.type === 'market' ? 'trending-up' : 'warning'}
@@ -76,11 +105,14 @@ const HomeScreen = () => {
                 />
             </View>
             <View style={{ flex: 1 }}>
-                <Text style={styles.notifTitle}>{item.title}</Text>
-                <Text style={styles.notifBody}>{item.body}</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={[styles.notifTitle, !item.read && { color: '#2e7d32' }]}>{item.title}</Text>
+                    {!item.read && <View style={styles.unreadDot} />}
+                </View>
+                <Text style={styles.notifBody} numberOfLines={2}>{item.body}</Text>
                 <Text style={styles.notifTime}>{item.timestamp}</Text>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
@@ -136,7 +168,7 @@ const HomeScreen = () => {
                 {renderQuickAction('leaf-outline', t('nav.crop'), 'Crop')}
                 {renderQuickAction('medkit-outline', t('nav.disease'), 'Home')}
                 {renderQuickAction('layers-outline', t('nav.soil'), 'Soil')}
-                {renderQuickAction('newspaper-outline', 'Tips', '48h')}
+                {renderQuickAction('newspaper-outline', 'Tips', 'AI')}
             </View>
 
             {/* Daily Tip */}
@@ -148,18 +180,21 @@ const HomeScreen = () => {
                 <Text style={styles.tipContent}>
                     Water your crops early in the morning to minimize evaporation and ensure better absorption.
                 </Text>
+                <TouchableOpacity onPress={() => NotificationEngine.triggerMockAlert('Test Alert', 'This is a test notification generated now.', 'weather', 'all').then(() => refreshNotifications())}>
+                    <Text style={{ color: 'rgba(255,255,255,0.6)', marginTop: 10, fontSize: 10 }}>Tap to Test Notification</Text>
+                </TouchableOpacity>
             </View>
-            {/* Alerts Section (Existing) */}
+            {/* Alerts Section */}
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>{t('home.alerts_title')}</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('48h')}>
+                <TouchableOpacity onPress={() => navigation.navigate('AI')}>
                     <Text style={styles.viewAll}>{t('home.view_all')}</Text>
                 </TouchableOpacity>
             </View>
 
             {alerts.length > 0 ? (
                 alerts.map((alert, index) => (
-                    <TouchableOpacity key={index} style={styles.alertCard} onPress={() => navigation.navigate('48h')}>
+                    <TouchableOpacity key={index} style={styles.alertCard} onPress={() => navigation.navigate('AI')}>
                         <View style={[styles.alertStripe, { backgroundColor: getSeverityColor(alert.severity) }]} />
                         <View style={styles.alertContent}>
                             <View style={styles.alertHeader}>
@@ -198,7 +233,7 @@ const HomeScreen = () => {
                         </View>
                         <FlatList
                             data={notifications}
-                            keyExtractor={(item, index) => index.toString()}
+                            keyExtractor={(item) => item.id}
                             renderItem={renderNotificationItem}
                             ListEmptyComponent={<Text style={styles.noNotifs}>No new notifications</Text>}
                         />
@@ -271,6 +306,14 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 10,
         fontWeight: 'bold',
+    },
+    unreadDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#2e7d32',
+        marginLeft: 5,
+        marginTop: 5,
     },
     greeting: {
         color: 'rgba(255,255,255,0.9)',
