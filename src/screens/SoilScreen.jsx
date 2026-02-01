@@ -446,7 +446,43 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         lineHeight: 20,
-    }
+    },
+    characteristicsCard: {
+        backgroundColor: '#e8f5e9',
+        marginHorizontal: 20,
+        marginBottom: 15,
+        padding: 15,
+        borderRadius: 12,
+        borderLeftWidth: 4,
+        borderLeftColor: '#2e7d32',
+    },
+    characteristicsTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 12,
+    },
+    characteristicItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+        paddingLeft: 5,
+    },
+    characteristicText: {
+        fontSize: 14,
+        color: '#333',
+        marginLeft: 8,
+        flex: 1,
+    },
+    textureInfo: {
+        fontSize: 13,
+        color: '#2e7d32',
+        fontWeight: '600',
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#c8e6c9',
+    },
 });
 
 export default SoilScreen;
