@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DAILY_TIPS from '../data/dailyTips.json';
-import { getCropTimeline, getUpcomingTasks, getHarvestInfo, getCropData } from '../data/cropDatabase';
+import { getCropTimeline, getUpcomingTasks, getHarvestInfo, getCropData, getRecommendation } from '../data/cropDatabase';
 
 // Import local illustrations
 const Illustrations = {
@@ -254,52 +254,7 @@ const HomeScreen = () => {
             {/* My Crops Section */}
             {userCrops.length > 0 && (
                 <>
-                    {/* Today's Tasks - Detailed Visual Cards */}
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>📅 Today's Farm Work</Text>
-                    </View>
 
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tasksScroll} contentContainerStyle={styles.tasksScrollContent}>
-                        {userCrops.flatMap(crop => {
-                            const upcoming = getUpcomingTasks(crop.name, crop.sowingDate, 1);
-                            return upcoming.length > 0 ? upcoming.map(task => ({ ...task, cropName: crop.name })) : [];
-                        }).map((task, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.visualTaskCard}
-                                onPress={() => {
-                                    setSelectedTask(task);
-                                    setTaskGuideVisible(true);
-                                }}
-                            >
-                                <Image
-                                    source={
-                                        task.type === 'watering' ? Illustrations.watering :
-                                            task.type === 'fertilizer' ? Illustrations.fertilizer :
-                                                task.type === 'harvest' ? Illustrations.harvest :
-                                                    Illustrations.vegetative
-                                    }
-                                    style={styles.taskImage}
-                                    resizeMode="cover"
-                                />
-                                <View style={styles.taskOverlay}>
-                                    <View style={[styles.taskStatusBadge, { backgroundColor: task.daysUntil === 0 ? '#4caf50' : '#ff9800' }]}>
-                                        <Text style={styles.taskStatusText}>
-                                            {task.daysUntil === 0 ? 'DO TODAY' : `In ${task.daysUntil} days`}
-                                        </Text>
-                                    </View>
-                                    <Text style={styles.taskTitle}>{task.task}</Text>
-                                    <Text style={styles.taskCrop}>{task.cropName}</Text>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
-                        {userCrops.length > 0 && userCrops.every(c => getUpcomingTasks(c.name, c.sowingDate, 1).length === 0) && (
-                            <View style={styles.noTasksCard}>
-                                <Ionicons name="checkmark-circle" size={40} color="#4caf50" />
-                                <Text style={styles.noTasksText}>All tasks completed for now!</Text>
-                            </View>
-                        )}
-                    </ScrollView>
 
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>🌾 My Crops Live Status</Text>
@@ -359,6 +314,12 @@ const HomeScreen = () => {
                                             ]}
                                         />
                                     </View>
+                                </View>
+                                <View style={styles.recommendationBox}>
+                                    <Ionicons name="bulb-outline" size={16} color="#f57c00" />
+                                    <Text style={styles.recommendationText}>
+                                        {getRecommendation(crop.name, crop.sowingDate)}
+                                    </Text>
                                 </View>
                             </View>
                         );
@@ -1028,6 +989,21 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    recommendationBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff3e0',
+        padding: 10,
+        borderRadius: 8,
+        marginTop: 15,
+        gap: 8,
+    },
+    recommendationText: {
+        fontSize: 12,
+        color: '#e65100',
+        flex: 1,
+        fontWeight: '500',
     },
 });
 

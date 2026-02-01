@@ -48,7 +48,35 @@ const CropScreen = () => {
     const [variety, setVariety] = useState('');
     const [soilType, setSoilType] = useState('');
     const [irrigation, setIrrigation] = useState('');
-    const [sowingDate, setSowingDate] = useState(new Date().toISOString().split('T')[0]);
+    const [sowingDate, setSowingDate] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 1); // Default to yesterday (1 day old)
+        return d.toISOString().split('T')[0];
+    });
+    const [plantAge, setPlantAge] = useState('1');
+
+    const handleSowingDateChange = (text) => {
+        setSowingDate(text);
+        if (text) {
+            const date = new Date(text);
+            const today = new Date();
+            if (!isNaN(date.getTime())) {
+                const diffTime = Math.abs(today - date);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                setPlantAge(diffDays.toString());
+            }
+        }
+    };
+
+    const handleAgeChange = (text) => {
+        setPlantAge(text);
+        if (text && !isNaN(text)) {
+            const days = parseInt(text);
+            const d = new Date();
+            d.setDate(d.getDate() - days);
+            setSowingDate(d.toISOString().split('T')[0]);
+        }
+    };
 
     const addCrop = () => {
         if (newCropName && variety) {
@@ -89,6 +117,11 @@ const CropScreen = () => {
         setSoilType('');
         setIrrigation('');
         setShowAdd(false);
+        // Reset to default 1 day old
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        setSowingDate(d.toISOString().split('T')[0]);
+        setPlantAge('1');
     };
 
     const calculateProgress = (sowingDate, duration) => {
@@ -192,13 +225,27 @@ const CropScreen = () => {
                                 placeholder="e.g. Lokwan, Hybrid 406"
                             />
 
-                            <Text style={styles.inputLabel}>Sowing Date (YYYY-MM-DD)</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={sowingDate}
-                                onChangeText={setSowingDate}
-                                placeholder="YYYY-MM-DD"
-                            />
+                            <View style={styles.row}>
+                                <View style={styles.halfInput}>
+                                    <Text style={styles.inputLabel}>Start Date (YYYY-MM-DD)</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={sowingDate}
+                                        onChangeText={handleSowingDateChange}
+                                        placeholder="YYYY-MM-DD"
+                                    />
+                                </View>
+                                <View style={styles.halfInput}>
+                                    <Text style={styles.inputLabel}>Or Plant Age (Days)</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={plantAge}
+                                        onChangeText={handleAgeChange}
+                                        placeholder="e.g. 1"
+                                        keyboardType="numeric"
+                                    />
+                                </View>
+                            </View>
 
                             <View style={styles.row}>
                                 <View style={styles.halfInput}>

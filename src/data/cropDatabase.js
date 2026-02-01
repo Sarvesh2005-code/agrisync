@@ -233,3 +233,37 @@ export const getHarvestInfo = (cropName, sowingDate) => {
         };
     }
 };
+
+/**
+ * Get context-aware recommendation for the crop
+ */
+export const getRecommendation = (cropName, sowingDate) => {
+    const cropData = CROP_DATABASE[cropName];
+    if (!cropData) return "Monitor crop health regularly.";
+
+    const sowing = new Date(sowingDate);
+    const today = new Date();
+    const daysSinceSowing = Math.floor((today - sowing) / (1000 * 60 * 60 * 24));
+
+    // 1. Check for immediate upcoming or overdue tasks (high priority)
+    const criticalTask = cropData.treatment_schedule.find(t => {
+        const taskDay = t.day;
+        return Math.abs(daysSinceSowing - taskDay) <= 2; // Tasks within +/- 2 days
+    });
+
+    if (criticalTask) {
+        return `Action: ${criticalTask.task} - ${criticalTask.description}`;
+    }
+
+    // 2. Fallback to growth stage advice
+    const currentStage = cropData.growth_stages.find(s => {
+        const [min, max] = s.days.split('-').map(Number);
+        return daysSinceSowing >= min && daysSinceSowing <= max;
+    });
+
+    if (currentStage) {
+        return `Stage: ${currentStage.stage}. Ensure optimal conditions.`;
+    }
+
+    return "Keep the field clean and monitor for pests.";
+};

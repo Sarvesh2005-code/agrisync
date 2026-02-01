@@ -63,8 +63,13 @@ const KNOWLEDGE_BASE = {
     }
 };
 
-// Delay to simulate AI "thinking"
+// Delay to simulate AI "thinking" if offline
 const SIMULATE_DELAY = 800;
+
+// Gemini API Configuration
+// NOTE: Replace with your actual Gemini API Key
+const GEMINI_API_KEY = "AIzaSyCDAJSotv9yEcVfvc_g3oRstsS6B6s9KUA";
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 export const AiAssistantEngine = {
     /**
@@ -74,19 +79,50 @@ export const AiAssistantEngine = {
      * @returns {Promise<string>} - AI response
      */
     ask: async (query, lang = 'en') => {
-        // Simulation delay for realistic AI feel
-        await new Promise(r => setTimeout(r, SIMULATE_DELAY));
-
         const q = query.toLowerCase();
-        const kb = KNOWLEDGE_BASE[lang] || KNOWLEDGE_BASE['en'];
 
-        // Voice/Image Simulations
+        // 1. Handle Visual/Voice Commands (Simulation)
         if (q.includes('analyzing_image_cmd')) {
+            await new Promise(r => setTimeout(r, SIMULATE_DELAY));
             return lang === 'hi' ? "यह पत्ता स्वस्थ लग रहा है, लेकिन हल्का पीलापन नाइट्रोजन की कमी का संकेत हो सकता है।" : "This leaf looks mostly healthy, but slight yellowing suggests Nitrogen deficiency. Apply Urea.";
         }
-        if (q.includes('voice_cmd_soil')) {
-            return kb.soil.health;
+
+        // 2. Try Online (Gemini API)
+        try {
+            // Construct prompt based on language
+            const systemPrompt = lang === 'hi'
+                ? "आप एक किसान सहायक 'एग्री सहायक' हैं। हिंदी में उत्तर दें। बहुत ही सरल और संक्षिप्त रखें।"
+                : "You are 'Agri Sahayak', a farming assistant. Answer efficiently and simply.";
+
+            const payload = {
+                contents: [{
+                    parts: [{
+                        text: `${systemPrompt} User asks: ${query}`
+                    }]
+                }]
+            };
+
+            const response = await fetch(GEMINI_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+            }
+        } catch (error) {
+            console.log("Offline or API Error, falling back to local DB:", error);
         }
+
+        // 3. Fallback to Offline Knowledge Base
+        await new Promise(r => setTimeout(r, SIMULATE_DELAY));
+        const kb = KNOWLEDGE_BASE[lang] || KNOWLEDGE_BASE['en'];
+
+        if (q.includes('voice_cmd_soil')) return kb.soil.health;
 
         // Knowledge Matching
         if (q.includes('wheat') || q.includes('गेहूं')) {
@@ -106,8 +142,8 @@ export const AiAssistantEngine = {
             return kb.pest.control + " " + kb.pest.neem;
         }
 
-        if (lang === 'hi') return "क्षमा करें, मुझे इसका उत्तर अभी नहीं पता है। कृपया गेहूँ/धान या मिट्टी के बारे में पूछें।";
-        return kb.general.unknown;
+        if (lang === 'hi') return "क्षमा करें, मैं अभी ऑफ़लाइन हूँ और मुझे इसका उत्तर नहीं पता। कृपया गेहूँ/धान या मिट्टी के बारे में पूछें।";
+        return "I am currently offline and limited to basic topics (Wheat, Rice, Soil). Please check your internet connection for full AI assistance.";
     },
 
     getQuickActions: (lang = 'en') => {
