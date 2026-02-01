@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Keyboard
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { AiAssistantEngine } from '../engines/aiAssistantEngine';
+import NetInfo from '@react-native-community/netinfo';
 
 const AiAssistantScreen = () => {
     const { t, i18n } = useTranslation();
@@ -12,9 +13,18 @@ const AiAssistantScreen = () => {
     const [inputText, setInputText] = useState('');
     const [loading, setLoading] = useState(false);
     const [statusText, setStatusText] = useState('');
+    const [isOnline, setIsOnline] = useState(false);
     const flatListRef = useRef();
 
     const quickActions = AiAssistantEngine.getQuickActions(i18n.language);
+
+    // Monitor network status
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+            setIsOnline(state.isConnected && state.isInternetReachable);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const sendMessage = async (text = inputText, isSystemCmd = false) => {
         if (!text.trim()) return;
@@ -92,9 +102,9 @@ const AiAssistantScreen = () => {
         >
             <View style={styles.header}>
                 <Text style={styles.title}>AgriSahayak AI</Text>
-                <View style={styles.onlineBadge}>
-                    <View style={styles.dot} />
-                    <Text style={styles.onlineText}>Online</Text>
+                <View style={[styles.onlineBadge, !isOnline && styles.offlineBadge]}>
+                    <View style={[styles.dot, !isOnline && styles.dotOffline]} />
+                    <Text style={styles.onlineText}>{isOnline ? 'Online' : 'Offline'}</Text>
                 </View>
             </View>
 
@@ -175,17 +185,23 @@ const styles = StyleSheet.create({
     onlineBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#e8f5e9',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
         borderRadius: 12,
+    },
+    offlineBadge: {
+        backgroundColor: 'rgba(158, 158, 158, 0.2)',
     },
     dot: {
         width: 8,
         height: 8,
         borderRadius: 4,
         backgroundColor: '#4caf50',
-        marginRight: 5,
+        marginRight: 6,
+    },
+    dotOffline: {
+        backgroundColor: '#9e9e9e',
     },
     onlineText: {
         fontSize: 12,
