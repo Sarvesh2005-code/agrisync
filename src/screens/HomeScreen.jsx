@@ -20,16 +20,12 @@ const HomeScreen = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [userName, setUserName] = useState('Farmer');
     const [currentTip, setCurrentTip] = useState(null);
-
-    // Mock User Crops
-    const DEMO_CROPS = [
-        { name: 'wheat', sowingDate: '2023-11-01', stage: 'Early Stage' },
-        { name: 'sugarcane', sowingDate: '2023-01-01', stage: 'Mature' }
-    ];
+    const [userCrops, setUserCrops] = useState([]);
 
     useEffect(() => {
         loadData();
         loadUserProfile();
+        loadUserCrops();
         loadRandomTip();
     }, []);
 
@@ -39,11 +35,14 @@ const HomeScreen = () => {
             const detected = await RegionDetectionEngine.detectRegion();
             setRegion(detected);
 
-            // Load 48h insights
-            const generatedInsights = await Insight48hEngine.generateInsights(DEMO_CROPS);
+            // Load user crops first
+            const crops = await loadUserCrops();
+
+            // Load 48h insights based on user crops
+            const generatedInsights = await Insight48hEngine.generateInsights(crops);
             setAlerts(generatedInsights.slice(0, 3));
 
-            await refreshNotifications();
+            await refreshNotifications(crops);
 
         } catch (e) {
             console.error(e);
@@ -64,15 +63,30 @@ const HomeScreen = () => {
         }
     };
 
+    const loadUserCrops = async () => {
+        try {
+            const stored = await AsyncStorage.getItem('user-crops');
+            if (stored) {
+                const crops = JSON.parse(stored);
+                setUserCrops(crops);
+                return crops;
+            }
+            return [];
+        } catch (e) {
+            console.error('Failed to load user crops:', e);
+            return [];
+        }
+    };
+
     const loadRandomTip = () => {
         const randomIndex = Math.floor(Math.random() * DAILY_TIPS.length);
         setCurrentTip(DAILY_TIPS[randomIndex]);
     };
 
-    const refreshNotifications = async () => {
-        const notifs = await NotificationEngine.getRecents(DEMO_CROPS);
+    const refreshNotifications = async (crops = userCrops) => {
+        const notifs = await NotificationEngine.getRecents(crops);
         setNotifications(notifs);
-        const count = await NotificationEngine.getUnreadCount(DEMO_CROPS);
+        const count = await NotificationEngine.getUnreadCount(crops);
         setUnreadCount(count);
     };
 

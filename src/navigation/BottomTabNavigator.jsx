@@ -35,9 +35,18 @@ const BottomTabNavigator = () => {
 
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: '#2e7d32', // Material Green 800
+                tabBarActiveTintColor: '#2e7d32',
                 tabBarInactiveTintColor: 'gray',
                 headerShown: false,
+                tabBarStyle: {
+                    height: 60,
+                    paddingBottom: 8,
+                    paddingTop: 8,
+                },
+                tabBarLabelStyle: {
+                    fontSize: 12,
+                    fontWeight: '600',
+                },
             })}
         >
             <Tab.Screen

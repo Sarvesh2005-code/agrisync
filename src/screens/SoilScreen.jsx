@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { SoilEngine } from '../engines/soilEngine';
 import { RegionDetectionEngine } from '../engines/regionDetectionEngine';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SOIL_TYPES = [
     'Alluvial Soil',
@@ -19,6 +20,7 @@ const SoilScreen = () => {
     const [soilInfo, setSoilInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
+    const [selectedSoilType, setSelectedSoilType] = useState(null);
 
     useEffect(() => {
         loadSoilData();
@@ -26,17 +28,41 @@ const SoilScreen = () => {
 
     const loadSoilData = async () => {
         setLoading(true);
-        const region = await RegionDetectionEngine.detectRegion();
-        // Defaulting to wheat for demo if no crop selected
-        const info = SoilEngine.getSoilInfo(region, 'wheat');
-        setSoilInfo(info);
-        setLoading(false);
+        try {
+            // Try to load saved soil type
+            const saved = await AsyncStorage.getItem('soil-preference');
+
+            if (saved) {
+                // User has selected a soil type before
+                const info = SoilEngine.getSoilDetails(saved);
+                setSoilInfo(info);
+                setSelectedSoilType(saved);
+            } else {
+                // First time - detect based on region
+                const region = await RegionDetectionEngine.detectRegion();
+                const info = SoilEngine.getSoilInfo(region, 'wheat');
+                setSoilInfo(info);
+                setSelectedSoilType(info.type);
+            }
+        } catch (e) {
+            console.error('Failed to load soil data:', e);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const changeSoilType = (newType) => {
+    const changeSoilType = async (newType) => {
         const newInfo = SoilEngine.getSoilDetails(newType);
         setSoilInfo(newInfo);
+        setSelectedSoilType(newType);
         setModalVisible(false);
+
+        // Save preference
+        try {
+            await AsyncStorage.setItem('soil-preference', newType);
+        } catch (e) {
+            console.error('Failed to save soil preference:', e);
+        }
     };
 
     const renderSoilProperty = (label, value) => (
