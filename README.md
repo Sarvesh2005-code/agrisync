@@ -42,6 +42,4 @@ AgriSync is a comprehensive digital farming assistant designed to empower farmer
 
 4.  **Run on Device**: Use the Expo Go app to scan the QR code, or run on Android Emulator/iOS Simulator.
 
-## License
 
-This project is licensed under the MIT License.
