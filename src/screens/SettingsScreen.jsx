@@ -29,6 +29,9 @@ const SettingsScreen = () => {
     const [currentLocation, setCurrentLocation] = useState(null);
     const [locationSource, setLocationSource] = useState('default');
     const [loadingLocation, setLoadingLocation] = useState(false);
+    const [locationModalVisible, setLocationModalVisible] = useState(false);
+    const [manualState, setManualState] = useState('');
+    const [manualDistrict, setManualDistrict] = useState('');
 
     useEffect(() => {
         loadProfile();
@@ -116,37 +119,29 @@ const SettingsScreen = () => {
      * Set manual location
      */
     const setManualLocation = () => {
-        Alert.prompt(
-            'Set Location',
-            'Enter your state and district (e.g., Maharashtra, Nashik)',
-            [
-                {
-                    text: 'Cancel',
-                    style: 'cancel'
-                },
-                {
-                    text: 'Save',
-                    onPress: async (text) => {
-                        if (!text || !text.includes(',')) {
-                            Alert.alert('Invalid', 'Please enter in format: State, District');
-                            return;
-                        }
+        setManualState(currentLocation?.state || '');
+        setManualDistrict(currentLocation?.district || '');
+        setLocationModalVisible(true);
+    };
 
-                        const [state, district] = text.split(',').map(s => s.trim());
-                        const success = await RegionDetectionEngine.setManualLocation(state, district);
+    /**
+     * Save manual location
+     */
+    const saveManualLocation = async () => {
+        if (!manualState.trim() || !manualDistrict.trim()) {
+            Alert.alert('Invalid', 'Please enter both state and district');
+            return;
+        }
 
-                        if (success) {
-                            await loadCurrentLocation();
-                            Alert.alert('Success', `Location set to: ${district}, ${state}`);
-                        } else {
-                            Alert.alert('Error', 'Failed to save location');
-                        }
-                    }
-                }
-            ],
-            'plain-text',
-            currentLocation ? `${currentLocation.state}, ${currentLocation.district}` : ''
-        );
+        const success = await RegionDetectionEngine.setManualLocation(manualState.trim(), manualDistrict.trim());
+
+        if (success) {
+            await loadCurrentLocation();
+            setLocationModalVisible(false);
+            Alert.alert('Success', `Location set to: ${manualDistrict}, ${manualState}`);
+        } else {
+            Alert.alert('Error', 'Failed to save location');
+        }
     };
 
 
@@ -390,6 +385,52 @@ const SettingsScreen = () => {
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.saveBtn} onPress={saveProfile}>
                                 <Text style={styles.saveText}>Save</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Location Modal */}
+            <Modal
+                visible={locationModalVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setLocationModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Set Manual Location</Text>
+                        <Text style={styles.modalSubtitle}>Enter your state and district</Text>
+
+                        <TextInput
+                            style={styles.input}
+                            placeholder="State (e.g., Maharashtra)"
+                            value={manualState}
+                            onChangeText={setManualState}
+                            autoCapitalize="words"
+                        />
+
+                        <TextInput
+                            style={styles.input}
+                            placeholder="District (e.g., Nashik)"
+                            value={manualDistrict}
+                            onChangeText={setManualDistrict}
+                            autoCapitalize="words"
+                        />
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.cancelButton]}
+                                onPress={() => setLocationModalVisible(false)}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.saveButton]}
+                                onPress={saveManualLocation}
+                            >
+                                <Text style={styles.saveButtonText}>Save</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

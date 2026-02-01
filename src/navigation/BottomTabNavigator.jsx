@@ -32,15 +32,15 @@ const BottomTabNavigator = () => {
                         iconName = focused ? 'settings' : 'settings-outline';
                     }
 
-                    return <Ionicons name={iconName} size={size} color={color} />;
+                    return <Ionicons name={iconName} size={26} color={color} />;
                 },
                 tabBarActiveTintColor: '#2e7d32',
                 tabBarInactiveTintColor: 'gray',
                 headerShown: false,
                 tabBarStyle: {
-                    height: 60,
-                    paddingBottom: 8,
-                    paddingTop: 8,
+                    height: 65,
+                    paddingBottom: 10,
+                    paddingTop: 5,
                     backgroundColor: '#fff',
                     borderTopWidth: 1,
                     borderTopColor: '#e0e0e0',
@@ -51,12 +51,16 @@ const BottomTabNavigator = () => {
                     shadowRadius: 3,
                 },
                 tabBarLabelStyle: {
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: '600',
-                    marginBottom: 4,
+                    marginTop: -2,
+                    marginBottom: 2,
                 },
                 tabBarItemStyle: {
-                    paddingVertical: 4,
+                    paddingTop: 5,
+                },
+                tabBarIconStyle: {
+                    marginTop: 3,
                 },
             })}
         >
