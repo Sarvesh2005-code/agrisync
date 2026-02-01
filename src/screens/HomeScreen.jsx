@@ -236,6 +236,65 @@ const HomeScreen = () => {
                     {currentTip ? currentTip[i18n.language] || currentTip.en : 'Loading tip...'}
                 </Text>
             </View>
+
+            {/* My Crops Section */}
+            {userCrops.length > 0 && (
+                <>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>🌾 My Crops</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Crop')}>
+                            <Text style={styles.viewAll}>Manage</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {userCrops.map((crop, index) => {
+                        const daysSinceSowing = Math.floor((new Date() - new Date(crop.sowingDate)) / (1000 * 60 * 60 * 24));
+                        const growthStage = daysSinceSowing < 30 ? 'Seedling' : daysSinceSowing < 60 ? 'Vegetative' : daysSinceSowing < 90 ? 'Flowering' : 'Mature';
+                        const nextFertilizer = daysSinceSowing < 15 ? '15 days' : daysSinceSowing < 30 ? '30 days' : daysSinceSowing < 60 ? '60 days' : 'Harvest soon';
+
+                        return (
+                            <View key={index} style={styles.cropDetailCard}>
+                                <View style={styles.cropDetailHeader}>
+                                    <View style={styles.cropIconContainer}>
+                                        <Ionicons name="leaf" size={24} color="#2e7d32" />
+                                    </View>
+                                    <View style={styles.cropDetailInfo}>
+                                        <Text style={styles.cropDetailName}>{crop.name}</Text>
+                                        <Text style={styles.cropDetailStage}>{growthStage} Stage</Text>
+                                    </View>
+                                    <TouchableOpacity
+                                        style={styles.cropEditBtn}
+                                        onPress={() => navigation.navigate('Crop')}
+                                    >
+                                        <Ionicons name="create-outline" size={20} color="#666" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View style={styles.cropDetailStats}>
+                                    <View style={styles.cropStat}>
+                                        <Ionicons name="calendar-outline" size={16} color="#666" />
+                                        <Text style={styles.cropStatLabel}>Sown</Text>
+                                        <Text style={styles.cropStatValue}>{daysSinceSowing} days ago</Text>
+                                    </View>
+                                    <View style={styles.cropStatDivider} />
+                                    <View style={styles.cropStat}>
+                                        <Ionicons name="flask-outline" size={16} color="#666" />
+                                        <Text style={styles.cropStatLabel}>Next Fertilizer</Text>
+                                        <Text style={styles.cropStatValue}>{nextFertilizer}</Text>
+                                    </View>
+                                </View>
+
+                                {crop.variety && (
+                                    <View style={styles.cropDetailExtra}>
+                                        <Text style={styles.cropDetailExtraText}>Variety: {crop.variety}</Text>
+                                    </View>
+                                )}
+                            </View>
+                        );
+                    })}
+                </>
+            )}
+
             {/* Alerts Section */}
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>{t('home.alerts_title')}</Text>
@@ -615,7 +674,86 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 50,
         color: '#999',
-    }
+    },
+    cropDetailCard: {
+        backgroundColor: '#fff',
+        marginHorizontal: 20,
+        marginBottom: 15,
+        borderRadius: 12,
+        padding: 15,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    cropDetailHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    cropIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#e8f5e9',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    cropDetailInfo: {
+        flex: 1,
+    },
+    cropDetailName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 2,
+    },
+    cropDetailStage: {
+        fontSize: 13,
+        color: '#2e7d32',
+        fontWeight: '600',
+    },
+    cropEditBtn: {
+        padding: 8,
+    },
+    cropDetailStats: {
+        flexDirection: 'row',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 8,
+        padding: 12,
+    },
+    cropStat: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    cropStatLabel: {
+        fontSize: 11,
+        color: '#666',
+        marginTop: 4,
+        marginBottom: 2,
+    },
+    cropStatValue: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    cropStatDivider: {
+        width: 1,
+        backgroundColor: '#ddd',
+        marginHorizontal: 10,
+    },
+    cropDetailExtra: {
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+    },
+    cropDetailExtraText: {
+        fontSize: 13,
+        color: '#666',
+    },
 });
 
 export default HomeScreen;

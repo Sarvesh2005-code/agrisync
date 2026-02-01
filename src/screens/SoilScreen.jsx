@@ -103,6 +103,22 @@ const SoilScreen = () => {
                             {renderSoilProperty('Moisture', soilInfo?.moisture)}
                         </View>
 
+                        {/* Soil Characteristics */}
+                        {soilInfo?.characteristics && (
+                            <View style={styles.characteristicsCard}>
+                                <Text style={styles.characteristicsTitle}>📋 Soil Characteristics</Text>
+                                {soilInfo.characteristics.map((char, idx) => (
+                                    <View key={idx} style={styles.characteristicItem}>
+                                        <Ionicons name="checkmark-circle" size={16} color="#2e7d32" />
+                                        <Text style={styles.characteristicText}>{char}</Text>
+                                    </View>
+                                ))}
+                                {soilInfo.texture && (
+                                    <Text style={styles.textureInfo}>Texture: {soilInfo.texture}</Text>
+                                )}
+                            </View>
+                        )}
+
                         {/* Soil Treatment Section */}
                         <View style={styles.treatmentCard}>
                             <View style={styles.treatmentHeader}>
@@ -111,29 +127,25 @@ const SoilScreen = () => {
                             </View>
 
                             <View style={styles.treatmentItem}>
-                                <Text style={styles.treatmentTitle}>🌿 Organic Amendments</Text>
+                                <Text style={styles.treatmentTitle}>🌿 Recommended Amendments</Text>
                                 <Text style={styles.treatmentText}>
-                                    • Add 5-10 tons of farmyard manure per hectare{'\n'}
-                                    • Apply vermicompost for better soil structure{'\n'}
-                                    • Use green manure crops like Sesbania or Dhaincha
+                                    {soilInfo?.amendments?.map((amendment, idx) => `• ${amendment}`).join('\n')}
                                 </Text>
                             </View>
 
                             <View style={styles.treatmentItem}>
-                                <Text style={styles.treatmentTitle}>💊 Chemical Fertilizers</Text>
+                                <Text style={styles.treatmentTitle}>💊 Fertilizer Schedule</Text>
                                 <Text style={styles.treatmentText}>
-                                    • NPK Ratio: 120:60:40 kg/ha for cereals{'\n'}
-                                    • Apply Urea in split doses{'\n'}
-                                    • Use DAP for phosphorus boost
+                                    • NPK Ratio: {soilInfo?.fertilizer?.npk}{'\n'}
+                                    • Organic: {soilInfo?.fertilizer?.organic}{'\n'}
+                                    • Timing: {soilInfo?.fertilizer?.timing}
                                 </Text>
                             </View>
 
                             <View style={styles.treatmentItem}>
-                                <Text style={styles.treatmentTitle}>🧪 pH Correction</Text>
+                                <Text style={styles.treatmentTitle}>🌾 Best Crops for This Soil</Text>
                                 <Text style={styles.treatmentText}>
-                                    {soilInfo?.ph?.includes('Acidic')
-                                        ? '• Apply lime (CaCO₃) at 2-5 tons/ha to increase pH\n• Use dolomite for Mg deficiency'
-                                        : '• Apply gypsum to reduce pH if needed\n• Add sulfur for acidification'}
+                                    {soilInfo?.bestCrops?.join(', ')}
                                 </Text>
                             </View>
                         </View>
