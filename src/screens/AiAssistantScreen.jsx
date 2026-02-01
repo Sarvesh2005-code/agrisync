@@ -81,7 +81,7 @@ const AiAssistantScreen = () => {
         <View style={[styles.msgContainer, item.sender === 'user' ? styles.msgUser : styles.msgBot]}>
             {item.sender === 'bot' && (
                 <View style={styles.botIcon}>
-                    <Ionicons name="leaf" size={16} color="#fff" />
+                    <Image source={require('../../assets/illustrations/mascot.png')} style={styles.botAvatar} resizeMode="contain" />
                 </View>
             )}
             <View style={[styles.msgBubble, item.sender === 'user' ? styles.bubbleUser : styles.bubbleBot]}>
@@ -224,13 +224,17 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
     },
     botIcon: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#2e7d32',
+        width: 40,
+        height: 40,
+        marginRight: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 8,
+    },
+    botAvatar: {
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: '#f1f8e9',
     },
     msgBubble: {
         maxWidth: '80%',

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, FlatList, Alert, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { RegionDetectionEngine } from '../engines/regionDetectionEngine';
 import { Insight48hEngine } from '../engines/insight48hEngine';
@@ -9,6 +9,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DAILY_TIPS from '../data/dailyTips.json';
+import { getCropTimeline, getUpcomingTasks, getHarvestInfo, getCropData } from '../data/cropDatabase';
+
+// Import local illustrations
+const Illustrations = {
+    watering: require('../../assets/illustrations/watering.png'),
+    fertilizer: require('../../assets/illustrations/fertilizer.png'),
+    harvest: require('../../assets/illustrations/harvest.png'),
+    seedling: require('../../assets/illustrations/seedling.png'),
+    vegetative: require('../../assets/illustrations/vegetative.png'),
+};
 
 const HomeScreen = () => {
     const { t, i18n } = useTranslation();
@@ -23,6 +33,10 @@ const HomeScreen = () => {
     const [currentTip, setCurrentTip] = useState(null);
     const [userCrops, setUserCrops] = useState([]);
     const [weather, setWeather] = useState(null);
+
+    // New state for visual guides
+    const [taskGuideVisible, setTaskGuideVisible] = useState(false);
+    const [selectedTask, setSelectedTask] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -240,27 +254,77 @@ const HomeScreen = () => {
             {/* My Crops Section */}
             {userCrops.length > 0 && (
                 <>
+                    {/* Today's Tasks - Detailed Visual Cards */}
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>🌾 My Crops</Text>
+                        <Text style={styles.sectionTitle}>📅 Today's Farm Work</Text>
+                    </View>
+
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tasksScroll} contentContainerStyle={styles.tasksScrollContent}>
+                        {userCrops.flatMap(crop => {
+                            const upcoming = getUpcomingTasks(crop.name, crop.sowingDate, 1);
+                            return upcoming.length > 0 ? upcoming.map(task => ({ ...task, cropName: crop.name })) : [];
+                        }).map((task, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={styles.visualTaskCard}
+                                onPress={() => {
+                                    setSelectedTask(task);
+                                    setTaskGuideVisible(true);
+                                }}
+                            >
+                                <Image
+                                    source={
+                                        task.type === 'watering' ? Illustrations.watering :
+                                            task.type === 'fertilizer' ? Illustrations.fertilizer :
+                                                task.type === 'harvest' ? Illustrations.harvest :
+                                                    Illustrations.vegetative
+                                    }
+                                    style={styles.taskImage}
+                                    resizeMode="cover"
+                                />
+                                <View style={styles.taskOverlay}>
+                                    <View style={[styles.taskStatusBadge, { backgroundColor: task.daysUntil === 0 ? '#4caf50' : '#ff9800' }]}>
+                                        <Text style={styles.taskStatusText}>
+                                            {task.daysUntil === 0 ? 'DO TODAY' : `In ${task.daysUntil} days`}
+                                        </Text>
+                                    </View>
+                                    <Text style={styles.taskTitle}>{task.task}</Text>
+                                    <Text style={styles.taskCrop}>{task.cropName}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                        {userCrops.length > 0 && userCrops.every(c => getUpcomingTasks(c.name, c.sowingDate, 1).length === 0) && (
+                            <View style={styles.noTasksCard}>
+                                <Ionicons name="checkmark-circle" size={40} color="#4caf50" />
+                                <Text style={styles.noTasksText}>All tasks completed for now!</Text>
+                            </View>
+                        )}
+                    </ScrollView>
+
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>🌾 My Crops Live Status</Text>
                         <TouchableOpacity onPress={() => navigation.navigate('Crop')}>
                             <Text style={styles.viewAll}>Manage</Text>
                         </TouchableOpacity>
                     </View>
 
                     {userCrops.map((crop, index) => {
+                        const harvestInfo = getHarvestInfo(crop.name, crop.sowingDate);
                         const daysSinceSowing = Math.floor((new Date() - new Date(crop.sowingDate)) / (1000 * 60 * 60 * 24));
-                        const growthStage = daysSinceSowing < 30 ? 'Seedling' : daysSinceSowing < 60 ? 'Vegetative' : daysSinceSowing < 90 ? 'Flowering' : 'Mature';
-                        const nextFertilizer = daysSinceSowing < 15 ? '15 days' : daysSinceSowing < 30 ? '30 days' : daysSinceSowing < 60 ? '60 days' : 'Harvest soon';
+
+                        // Determine growth stage visually
+                        const isSeedling = daysSinceSowing < 30;
+                        const iconSource = isSeedling ? Illustrations.seedling : Illustrations.vegetative;
 
                         return (
                             <View key={index} style={styles.cropDetailCard}>
                                 <View style={styles.cropDetailHeader}>
-                                    <View style={styles.cropIconContainer}>
-                                        <Ionicons name="leaf" size={24} color="#2e7d32" />
+                                    <View style={[styles.cropIconContainer, { backgroundColor: '#fff', overflow: 'hidden' }]}>
+                                        <Image source={iconSource} style={styles.cropIconImage} resizeMode="contain" />
                                     </View>
                                     <View style={styles.cropDetailInfo}>
                                         <Text style={styles.cropDetailName}>{crop.name}</Text>
-                                        <Text style={styles.cropDetailStage}>{growthStage} Stage</Text>
+                                        <Text style={styles.cropDetailStage}>{daysSinceSowing} days old</Text>
                                     </View>
                                     <TouchableOpacity
                                         style={styles.cropEditBtn}
@@ -271,24 +335,31 @@ const HomeScreen = () => {
                                 </View>
 
                                 <View style={styles.cropDetailStats}>
-                                    <View style={styles.cropStat}>
-                                        <Ionicons name="calendar-outline" size={16} color="#666" />
-                                        <Text style={styles.cropStatLabel}>Sown</Text>
-                                        <Text style={styles.cropStatValue}>{daysSinceSowing} days ago</Text>
+                                    <View style={styles.harvestContainer}>
+                                        <View style={styles.harvestInfo}>
+                                            <Ionicons name="time" size={18} color="#2e7d32" />
+                                            <Text style={styles.harvestLabel}>
+                                                {harvestInfo?.type === 'continuous' ? 'First Harvest:' : 'Harvest In:'}
+                                            </Text>
+                                        </View>
+                                        <Text style={styles.harvestValue}>
+                                            {harvestInfo?.type === 'continuous'
+                                                ? `${harvestInfo.daysToFirstHarvest > 0 ? harvestInfo.daysToFirstHarvest + ' days' : 'Ready Now!'}`
+                                                : `${harvestInfo?.daysToHarvest} days`
+                                            }
+                                        </Text>
                                     </View>
-                                    <View style={styles.cropStatDivider} />
-                                    <View style={styles.cropStat}>
-                                        <Ionicons name="flask-outline" size={16} color="#666" />
-                                        <Text style={styles.cropStatLabel}>Next Fertilizer</Text>
-                                        <Text style={styles.cropStatValue}>{nextFertilizer}</Text>
+
+                                    {/* Harvest Progress Bar */}
+                                    <View style={styles.progressBarBg}>
+                                        <View
+                                            style={[
+                                                styles.progressBarFill,
+                                                { width: `${Math.min(100, Math.max(0, (daysSinceSowing / (daysSinceSowing + (harvestInfo?.daysToHarvest || 100))) * 100))}%` }
+                                            ]}
+                                        />
                                     </View>
                                 </View>
-
-                                {crop.variety && (
-                                    <View style={styles.cropDetailExtra}>
-                                        <Text style={styles.cropDetailExtraText}>Variety: {crop.variety}</Text>
-                                    </View>
-                                )}
                             </View>
                         );
                     })}
@@ -348,6 +419,51 @@ const HomeScreen = () => {
                             renderItem={renderNotificationItem}
                             ListEmptyComponent={<Text style={styles.noNotifs}>No new notifications</Text>}
                         />
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Task Guide Modal */}
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={taskGuideVisible}
+                onRequestClose={() => setTaskGuideVisible(false)}
+            >
+                <View style={styles.guideModalContainer}>
+                    <View style={styles.guideCard}>
+                        {selectedTask && (
+                            <>
+                                <Image
+                                    source={
+                                        selectedTask.type === 'watering' ? Illustrations.watering :
+                                            selectedTask.type === 'fertilizer' ? Illustrations.fertilizer :
+                                                selectedTask.type === 'harvest' ? Illustrations.harvest :
+                                                    Illustrations.vegetative
+                                    }
+                                    style={styles.guideImage}
+                                    resizeMode="cover"
+                                />
+                                <ScrollView style={styles.guideContent}>
+                                    <Text style={styles.guideTitle}>{selectedTask.task}</Text>
+                                    <Text style={styles.guideSubtitle}>For {selectedTask.cropName}</Text>
+
+                                    <View style={styles.guideSteps}>
+                                        <Text style={styles.guideStepTitle}>📋 Instructions</Text>
+                                        <Text style={styles.guideStepText}>
+                                            {selectedTask.description || "Follow standard farming practices for this task."}
+                                        </Text>
+                                    </View>
+
+                                    <TouchableOpacity
+                                        style={styles.guideCloseBtn}
+                                        onPress={() => setTaskGuideVisible(false)}
+                                    >
+                                        <Text style={styles.guideCloseText}>Close Guide</Text>
+                                    </TouchableOpacity>
+                                </ScrollView>
+                            </>
+                        )}
                     </View>
                 </View>
             </Modal>
@@ -753,6 +869,165 @@ const styles = StyleSheet.create({
     cropDetailExtraText: {
         fontSize: 13,
         color: '#666',
+    },
+    visualTaskCard: {
+        width: 140,
+        height: 180,
+        marginRight: 15,
+        borderRadius: 12,
+        overflow: 'hidden',
+        backgroundColor: '#fff',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    taskImage: {
+        width: '100%',
+        height: '100%',
+    },
+    taskOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        padding: 10,
+        paddingTop: 15,
+    },
+    taskTitle: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 14,
+        marginBottom: 2,
+    },
+    taskCrop: {
+        color: '#ddd',
+        fontSize: 12,
+    },
+    taskStatusBadge: {
+        backgroundColor: '#ff9800',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+        marginBottom: 6,
+    },
+    taskStatusText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    tasksScroll: {
+        marginLeft: 20,
+        marginBottom: 25,
+    },
+    tasksScrollContent: {
+        paddingRight: 20,
+        paddingBottom: 5,
+    },
+    noTasksCard: {
+        width: 300,
+        height: 100,
+        backgroundColor: '#e8f5e9',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 12,
+        flexDirection: 'row',
+        gap: 10,
+    },
+    noTasksText: {
+        color: '#2e7d32',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    harvestContainer: {
+        flex: 1,
+    },
+    harvestInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 6,
+        gap: 6,
+    },
+    harvestLabel: {
+        fontSize: 12,
+        color: '#555',
+    },
+    harvestValue: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#2e7d32',
+    },
+    progressBarBg: {
+        height: 8,
+        backgroundColor: '#e0e0e0',
+        borderRadius: 4,
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+        backgroundColor: '#4caf50',
+        borderRadius: 4,
+    },
+    guideModalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    guideCard: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        overflow: 'hidden',
+        maxHeight: '80%',
+    },
+    guideImage: {
+        width: '100%',
+        height: 250,
+    },
+    guideContent: {
+        padding: 20,
+    },
+    guideTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        color: '#333',
+    },
+    guideSubtitle: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: 20,
+    },
+    guideSteps: {
+        backgroundColor: '#f5f5f5',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 20,
+    },
+    guideStepTitle: {
+        fontWeight: 'bold',
+        marginBottom: 10,
+        color: '#333',
+    },
+    guideStepText: {
+        fontSize: 16,
+        lineHeight: 24,
+        color: '#444',
+    },
+    guideCloseBtn: {
+        backgroundColor: '#2e7d32',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    guideCloseText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 
