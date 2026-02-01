@@ -12,11 +12,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, TextInput, Linking, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, TextInput, Linking, Share, ActivityIndicator } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LANGUAGES } from '../utils/constants';
+import { RegionDetectionEngine } from '../engines/regionDetectionEngine';
 
 const SettingsScreen = () => {
     const { t, i18n } = useTranslation();
@@ -25,9 +26,13 @@ const SettingsScreen = () => {
     const [tempName, setTempName] = useState('');
     const [tempPhone, setTempPhone] = useState('');
     const [tempVillage, setTempVillage] = useState('');
+    const [currentLocation, setCurrentLocation] = useState(null);
+    const [locationSource, setLocationSource] = useState('default');
+    const [loadingLocation, setLoadingLocation] = useState(false);
 
     useEffect(() => {
         loadProfile();
+        loadCurrentLocation();
     }, []);
 
     /**
@@ -66,6 +71,82 @@ const SettingsScreen = () => {
         await i18n.changeLanguage(lang);
         await AsyncStorage.setItem('user-language', lang);
         Alert.alert('Success', 'Language changed successfully!');
+    };
+
+    /**
+     * Load current location
+     */
+    const loadCurrentLocation = async () => {
+        try {
+            const region = await RegionDetectionEngine.detectRegion();
+            setCurrentLocation(region);
+            const source = await RegionDetectionEngine.getLocationSource();
+            setLocationSource(source);
+        } catch (e) {
+            console.error('Failed to load location:', e);
+        }
+    };
+
+    /**
+     * Auto-detect location using GPS
+     */
+    const autoDetectLocation = async () => {
+        setLoadingLocation(true);
+        try {
+            // Clear manual location first
+            await RegionDetectionEngine.clearManualLocation();
+
+            // Detect using GPS
+            const region = await RegionDetectionEngine.detectRegion();
+            setCurrentLocation(region);
+
+            const source = await RegionDetectionEngine.getLocationSource();
+            setLocationSource(source);
+
+            Alert.alert('Success', `Location detected: ${region.district}, ${region.state}`);
+        } catch (e) {
+            console.error('GPS detection failed:', e);
+            Alert.alert('Error', 'Failed to detect location. Please check GPS permissions.');
+        } finally {
+            setLoadingLocation(false);
+        }
+    };
+
+    /**
+     * Set manual location
+     */
+    const setManualLocation = () => {
+        Alert.prompt(
+            'Set Location',
+            'Enter your state and district (e.g., Maharashtra, Nashik)',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Save',
+                    onPress: async (text) => {
+                        if (!text || !text.includes(',')) {
+                            Alert.alert('Invalid', 'Please enter in format: State, District');
+                            return;
+                        }
+
+                        const [state, district] = text.split(',').map(s => s.trim());
+                        const success = await RegionDetectionEngine.setManualLocation(state, district);
+
+                        if (success) {
+                            await loadCurrentLocation();
+                            Alert.alert('Success', `Location set to: ${district}, ${state}`);
+                        } else {
+                            Alert.alert('Error', 'Failed to save location');
+                        }
+                    }
+                }
+            ],
+            'plain-text',
+            currentLocation ? `${currentLocation.state}, ${currentLocation.district}` : ''
+        );
     };
 
 
@@ -139,6 +220,40 @@ const SettingsScreen = () => {
                 {renderSettingItem('notifications-outline', 'Notifications', 'Enabled', () => {
                     Alert.alert('Notifications', 'Notification settings will be available in future updates.');
                 }, 'Weather alerts, pest warnings')}
+            </View>
+
+            {/* Location Settings */}
+            <View style={styles.section}>
+                <Text style={styles.sectionHeader}>📍 Location</Text>
+                <View style={styles.locationCard}>
+                    <View style={styles.locationInfo}>
+                        <Text style={styles.locationLabel}>Current Location</Text>
+                        <Text style={styles.locationText}>
+                            {currentLocation ? `${currentLocation.district}, ${currentLocation.state}` : 'Loading...'}
+                        </Text>
+                        <Text style={styles.locationSource}>
+                            Source: {locationSource === 'gps' ? '🛰️ GPS' : locationSource === 'manual' ? '✏️ Manual' : locationSource === 'cached' ? '💾 Cached' : '📍 Default'}
+                        </Text>
+                    </View>
+                    <View style={styles.locationActions}>
+                        <TouchableOpacity
+                            style={styles.locationBtn}
+                            onPress={autoDetectLocation}
+                            disabled={loadingLocation}
+                        >
+                            {loadingLocation ? (
+                                <ActivityIndicator size="small" color="#2e7d32" />
+                            ) : (
+                                <Ionicons name="navigate" size={20} color="#2e7d32" />
+                            )}
+                            <Text style={styles.locationBtnText}>Auto-Detect</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.locationBtn} onPress={setManualLocation}>
+                            <Ionicons name="pencil" size={20} color="#2e7d32" />
+                            <Text style={styles.locationBtnText}>Set Manual</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </View>
 
 
@@ -463,6 +578,57 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#fff',
+    },
+    logoutText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#d32f2f',
+    },
+    locationCard: {
+        backgroundColor: '#f5f5f5',
+        margin: 15,
+        padding: 15,
+        borderRadius: 12,
+    },
+    locationInfo: {
+        marginBottom: 15,
+    },
+    locationLabel: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 5,
+    },
+    locationText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 5,
+    },
+    locationSource: {
+        fontSize: 13,
+        color: '#2e7d32',
+    },
+    locationActions: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    locationBtn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#fff',
+        paddingVertical: 12,
+        paddingHorizontal: 15,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#2e7d32',
+        gap: 8,
+    },
+    locationBtnText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#2e7d32',
     },
 });
 

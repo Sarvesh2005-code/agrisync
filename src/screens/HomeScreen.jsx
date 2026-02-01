@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { RegionDetectionEngine } from '../engines/regionDetectionEngine';
 import { Insight48hEngine } from '../engines/insight48hEngine';
 import { NotificationEngine } from '../engines/notificationEngine';
+import { WeatherEngine } from '../engines/weatherEngine';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,6 +22,7 @@ const HomeScreen = () => {
     const [userName, setUserName] = useState('Farmer');
     const [currentTip, setCurrentTip] = useState(null);
     const [userCrops, setUserCrops] = useState([]);
+    const [weather, setWeather] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -34,6 +36,10 @@ const HomeScreen = () => {
         try {
             const detected = await RegionDetectionEngine.detectRegion();
             setRegion(detected);
+
+            // Load weather based on region
+            const weatherData = WeatherEngine.getCurrentWeather(detected);
+            setWeather(weatherData);
 
             // Load user crops first
             const crops = await loadUserCrops();
@@ -194,18 +200,18 @@ const HomeScreen = () => {
             <View style={styles.card}>
                 <View style={styles.weatherHeader}>
                     <Text style={styles.cardTitle}>{t('home.weather')}</Text>
-                    <Ionicons name="sunny" size={24} color="#fbc02d" />
+                    <Ionicons name={weather?.icon || 'sunny'} size={24} color="#fbc02d" />
                 </View>
                 <View style={styles.weatherRow}>
-                    <Text style={styles.temp}>28°C</Text>
+                    <Text style={styles.temp}>{weather?.temperature || '--'}°C</Text>
                     <View>
-                        <Text style={styles.desc}>Sunny</Text>
-                        <Text style={styles.feelsLike}>Feels like 30°C</Text>
+                        <Text style={styles.desc}>{weather?.condition || 'Loading...'}</Text>
+                        <Text style={styles.feelsLike}>Feels like {weather?.feelsLike || '--'}°C</Text>
                     </View>
                 </View>
                 <View style={styles.weatherDetails}>
-                    <Text style={styles.weatherDetailText}><Ionicons name="water-outline" /> 65% Humidity</Text>
-                    <Text style={styles.weatherDetailText}><Ionicons name="umbrella-outline" /> 0mm Rain</Text>
+                    <Text style={styles.weatherDetailText}><Ionicons name="water-outline" /> {weather?.humidity || '--'}% Humidity</Text>
+                    <Text style={styles.weatherDetailText}><Ionicons name="umbrella-outline" /> {weather?.rainfall || 0}mm Rain</Text>
                 </View>
             </View>
 
