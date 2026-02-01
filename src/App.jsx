@@ -3,7 +3,7 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import BottomTabNavigator from './navigation/BottomTabNavigator';
+import MainNavigator from './navigation/MainNavigator';
 import LoginScreen from './screens/LoginScreen';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initDB } from './db/initDB';
@@ -61,7 +61,7 @@ export default function App() {
         <ErrorBoundary>
             <SafeAreaProvider>
                 <NavigationContainer>
-                    <BottomTabNavigator />
+                    <MainNavigator />
                 </NavigationContainer>
             </SafeAreaProvider>
         </ErrorBoundary>
