@@ -6,9 +6,11 @@ import { Insight48hEngine } from '../engines/insight48hEngine';
 import { NotificationEngine } from '../engines/notificationEngine';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DAILY_TIPS from '../data/dailyTips.json';
 
 const HomeScreen = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigation = useNavigation();
     const [region, setRegion] = useState(null);
     const [alerts, setAlerts] = useState([]);
@@ -16,6 +18,8 @@ const HomeScreen = () => {
     const [notifVisible, setNotifVisible] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [userName, setUserName] = useState('Farmer');
+    const [currentTip, setCurrentTip] = useState(null);
 
     // Mock User Crops
     const DEMO_CROPS = [
@@ -25,6 +29,8 @@ const HomeScreen = () => {
 
     useEffect(() => {
         loadData();
+        loadUserProfile();
+        loadRandomTip();
     }, []);
 
     const loadData = async () => {
@@ -44,6 +50,23 @@ const HomeScreen = () => {
         } finally {
             setRefreshing(false);
         }
+    };
+
+    const loadUserProfile = async () => {
+        try {
+            const profile = await AsyncStorage.getItem('user-profile');
+            if (profile) {
+                const parsed = JSON.parse(profile);
+                setUserName(parsed.name || 'Farmer');
+            }
+        } catch (e) {
+            console.error('Failed to load user profile:', e);
+        }
+    };
+
+    const loadRandomTip = () => {
+        const randomIndex = Math.floor(Math.random() * DAILY_TIPS.length);
+        setCurrentTip(DAILY_TIPS[randomIndex]);
     };
 
     const refreshNotifications = async () => {
@@ -146,9 +169,9 @@ const HomeScreen = () => {
                     </TouchableOpacity>
                 </View>
                 <View>
-                    <Text style={styles.greeting}>{t('home.welcome')}</Text>
+                    <Text style={styles.greeting}>Welcome back, {userName}!</Text>
                     <Text style={styles.location}>
-                        {region ? `${region.district}, ${region.state}` : 'Locating...'}
+                        📍 {region ? `${region.district}, ${region.state}` : 'Locating...'}
                     </Text>
                 </View>
             </View>
@@ -185,13 +208,13 @@ const HomeScreen = () => {
                 <View style={styles.tipHeader}>
                     <Ionicons name="bulb" size={20} color="#fff" />
                     <Text style={styles.tipTitle}>Daily Tip</Text>
+                    <TouchableOpacity onPress={loadRandomTip} style={styles.refreshTip}>
+                        <Ionicons name="refresh" size={18} color="rgba(255,255,255,0.8)" />
+                    </TouchableOpacity>
                 </View>
                 <Text style={styles.tipContent}>
-                    Water your crops early in the morning to minimize evaporation and ensure better absorption.
+                    {currentTip ? currentTip[i18n.language] || currentTip.en : 'Loading tip...'}
                 </Text>
-                <TouchableOpacity onPress={() => NotificationEngine.triggerMockAlert('Test Alert', 'This is a test notification generated now.', 'weather', 'all').then(() => refreshNotifications())}>
-                    <Text style={{ color: 'rgba(255,255,255,0.6)', marginTop: 10, fontSize: 10 }}>Tap to Test Notification</Text>
-                </TouchableOpacity>
             </View>
             {/* Alerts Section */}
             <View style={styles.sectionHeader}>
@@ -435,8 +458,11 @@ const styles = StyleSheet.create({
     tipTitle: {
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: 16,
-        marginLeft: 10,
+        marginLeft: 8,
+        flex: 1,
+    },
+    refreshTip: {
+        padding: 5,
     },
     tipContent: {
         color: 'rgba(255,255,255,0.9)',

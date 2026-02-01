@@ -23,6 +23,7 @@ const LoginScreen = ({ onLoginSuccess }) => {
 
     // Tab state: 'signup' or 'signin'
     const [activeTab, setActiveTab] = useState('signup');
+    const [loading, setLoading] = useState(false);
 
     // Sign Up fields
     const [name, setName] = useState('');
@@ -54,13 +55,27 @@ const LoginScreen = ({ onLoginSuccess }) => {
             return;
         }
 
+        setLoading(true);
         try {
+            // Check if phone already exists
+            const existing = await AsyncStorage.getItem('user-profile');
+            if (existing) {
+                const existingProfile = JSON.parse(existing);
+                if (existingProfile.phone === phone.trim()) {
+                    Alert.alert('Account Exists', 'This phone number is already registered. Please sign in instead.');
+                    setLoading(false);
+                    setActiveTab('signin');
+                    return;
+                }
+            }
+
             const profile = {
                 name: name.trim(),
                 phone: phone.trim(),
                 village: village.trim() || 'Not specified',
                 language: selectedLang,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString()
             };
 
             // Save profile
@@ -71,11 +86,13 @@ const LoginScreen = ({ onLoginSuccess }) => {
             await AsyncStorage.setItem('user-language', selectedLang);
 
             // Success
+            setLoading(false);
             if (onLoginSuccess) {
                 onLoginSuccess();
             }
         } catch (e) {
             console.error('Sign up error:', e);
+            setLoading(false);
             Alert.alert('Error', 'Failed to create account. Please try again.');
         }
     };
@@ -89,11 +106,13 @@ const LoginScreen = ({ onLoginSuccess }) => {
             return;
         }
 
+        setLoading(true);
         try {
             // Check if profile exists
             const stored = await AsyncStorage.getItem('user-profile');
 
             if (!stored) {
+                setLoading(false);
                 Alert.alert(
                     'Account Not Found',
                     'No account found with this phone number. Please sign up first.',
@@ -109,6 +128,10 @@ const LoginScreen = ({ onLoginSuccess }) => {
 
             // Validate phone number
             if (profile.phone === signInPhone.trim()) {
+                // Update last login
+                profile.lastLogin = new Date().toISOString();
+                await AsyncStorage.setItem('user-profile', JSON.stringify(profile));
+
                 // Load user's language preference
                 const lang = await AsyncStorage.getItem('user-language');
                 if (lang) {
@@ -116,14 +139,17 @@ const LoginScreen = ({ onLoginSuccess }) => {
                 }
 
                 // Success
+                setLoading(false);
                 if (onLoginSuccess) {
                     onLoginSuccess();
                 }
             } else {
+                setLoading(false);
                 Alert.alert('Invalid', 'Phone number does not match our records.');
             }
         } catch (e) {
             console.error('Sign in error:', e);
+            setLoading(false);
             Alert.alert('Error', 'Failed to sign in. Please try again.');
         }
     };
@@ -206,9 +232,13 @@ const LoginScreen = ({ onLoginSuccess }) => {
                 </View>
             </View>
 
-            <TouchableOpacity style={styles.submitButton} onPress={handleSignUp}>
-                <Text style={styles.submitButtonText}>Create Account</Text>
-                <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 10 }} />
+            <TouchableOpacity
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                onPress={handleSignUp}
+                disabled={loading}
+            >
+                <Text style={styles.submitButtonText}>{loading ? 'Creating Account...' : 'Create Account'}</Text>
+                {!loading && <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 10 }} />}
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setActiveTab('signin')} style={styles.switchTab}>
@@ -241,9 +271,13 @@ const LoginScreen = ({ onLoginSuccess }) => {
                 </View>
             </View>
 
-            <TouchableOpacity style={styles.submitButton} onPress={handleSignIn}>
-                <Text style={styles.submitButtonText}>Sign In</Text>
-                <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginLeft: 10 }} />
+            <TouchableOpacity
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                onPress={handleSignIn}
+                disabled={loading}
+            >
+                <Text style={styles.submitButtonText}>{loading ? 'Signing In...' : 'Sign In'}</Text>
+                {!loading && <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginLeft: 10 }} />}
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setActiveTab('signup')} style={styles.switchTab}>
@@ -451,6 +485,10 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    submitButtonDisabled: {
+        backgroundColor: '#a5d6a7',
+        opacity: 0.7,
     },
     switchTab: {
         marginTop: 20,
