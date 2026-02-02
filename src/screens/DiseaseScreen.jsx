@@ -16,7 +16,7 @@
  * 4. Get treatment plan
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,7 +31,14 @@ const DiseaseScreen = () => {
     const [selectedSymptoms, setSelectedSymptoms] = useState([]);
     const [diagnosis, setDiagnosis] = useState([]);
 
-    const crops = DiseaseEngine.getAvailableCrops();
+    // Memoize crops list as it's static
+    const crops = useMemo(() => DiseaseEngine.getAvailableCrops(), []);
+
+    // Memoize symptoms based on selected crop to avoid recalculation on every render
+    const symptoms = useMemo(() => {
+        if (!selectedCrop) return [];
+        return DiseaseEngine.getCommonSymptoms(selectedCrop);
+    }, [selectedCrop]);
 
     /**
      * Handle crop selection and move to symptom selection
@@ -58,7 +65,7 @@ const DiseaseScreen = () => {
      */
     const handleDiagnose = () => {
         if (selectedSymptoms.length === 0) {
-            Alert.alert('No Symptoms', 'Please select at least one symptom to diagnose.');
+            Alert.alert(t('common.error'), t('disease.step2_title'));
             return;
         }
 
@@ -82,22 +89,26 @@ const DiseaseScreen = () => {
      */
     const renderCropSelection = () => (
         <View style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>Step 1: Select Your Crop</Text>
-            <Text style={styles.stepSubtitle}>Choose the crop that is affected</Text>
+            <Text style={styles.stepTitle}>{t('disease.step1_title')}</Text>
+            <Text style={styles.stepSubtitle}>{t('disease.step1_subtitle')}</Text>
 
             <View style={styles.cropGrid}>
-                {crops.map(crop => (
-                    <TouchableOpacity
-                        key={crop}
-                        style={styles.cropCard}
-                        onPress={() => handleCropSelect(crop)}
-                    >
-                        <View style={styles.cropIcon}>
-                            <Text style={styles.cropEmoji}>🌾</Text>
-                        </View>
-                        <Text style={styles.cropName}>{crop.charAt(0).toUpperCase() + crop.slice(1)}</Text>
-                    </TouchableOpacity>
-                ))}
+                {crops.length > 0 ? (
+                    crops.map(crop => (
+                        <TouchableOpacity
+                            key={crop}
+                            style={styles.cropCard}
+                            onPress={() => handleCropSelect(crop)}
+                        >
+                            <View style={styles.cropIcon}>
+                                <Text style={styles.cropEmoji}>🌾</Text>
+                            </View>
+                            <Text style={styles.cropName}>{t(`crops.${crop}`, { defaultValue: crop.charAt(0).toUpperCase() + crop.slice(1) })}</Text>
+                        </TouchableOpacity>
+                    ))
+                ) : (
+                    <Text style={styles.noResultsText}>{t('common.error')}</Text>
+                )}
             </View>
         </View>
     );
@@ -106,43 +117,49 @@ const DiseaseScreen = () => {
      * Render symptom selection step
      */
     const renderSymptomSelection = () => {
-        const symptoms = DiseaseEngine.getCommonSymptoms(selectedCrop);
-
         return (
             <View style={styles.stepContainer}>
                 <TouchableOpacity onPress={() => setStep(1)} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={24} color="#2e7d32" />
-                    <Text style={styles.backText}>Change Crop</Text>
+                    <Text style={styles.backText}>{t('disease.change_crop')}</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.stepTitle}>Step 2: Select Symptoms</Text>
+                <Text style={styles.stepTitle}>{t('disease.step2_title')}</Text>
                 <Text style={styles.stepSubtitle}>
                     Crop: <Text style={styles.highlight}>{selectedCrop}</Text> •
                     Selected: <Text style={styles.highlight}>{selectedSymptoms.length}</Text>
                 </Text>
 
                 <ScrollView style={styles.symptomList} showsVerticalScrollIndicator={false}>
-                    {symptoms.map((symptom, index) => {
-                        const isSelected = selectedSymptoms.includes(symptom);
-                        return (
-                            <TouchableOpacity
-                                key={index}
-                                style={[styles.symptomCard, isSelected && styles.symptomSelected]}
-                                onPress={() => toggleSymptom(symptom)}
-                            >
-                                <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                                    {isSelected && <Ionicons name="checkmark" size={18} color="#fff" />}
-                                </View>
-                                <Text style={[styles.symptomText, isSelected && styles.symptomTextSelected]}>
-                                    {symptom}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
+                    {symptoms.length > 0 ? (
+                        symptoms.map((symptom, index) => {
+                            const isSelected = selectedSymptoms.includes(symptom);
+                            return (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={[styles.symptomCard, isSelected && styles.symptomSelected]}
+                                    onPress={() => toggleSymptom(symptom)}
+                                >
+                                    <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+                                        {isSelected && <Ionicons name="checkmark" size={18} color="#fff" />}
+                                    </View>
+                                    <Text style={[styles.symptomText, isSelected && styles.symptomTextSelected]}>
+                                        {symptom}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })
+                    ) : (
+                        <Text style={styles.noResultsText}>No symptoms found for this crop.</Text>
+                    )}
                 </ScrollView>
 
-                <TouchableOpacity style={styles.diagnoseBtn} onPress={handleDiagnose}>
-                    <Text style={styles.diagnoseBtnText}>Diagnose Problem</Text>
+                <TouchableOpacity
+                    style={[styles.diagnoseBtn, { opacity: selectedSymptoms.length > 0 ? 1 : 0.6 }]}
+                    onPress={handleDiagnose}
+                    disabled={selectedSymptoms.length === 0}
+                >
+                    <Text style={styles.diagnoseBtnText}>{t('disease.diagnose_btn')}</Text>
                     <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 10 }} />
                 </TouchableOpacity>
             </View>
@@ -160,10 +177,10 @@ const DiseaseScreen = () => {
             <ScrollView style={styles.resultsContainer} showsVerticalScrollIndicator={false}>
                 <TouchableOpacity onPress={handleReset} style={styles.resetBtn}>
                     <Ionicons name="refresh" size={20} color="#2e7d32" />
-                    <Text style={styles.resetText}>Start New Diagnosis</Text>
+                    <Text style={styles.resetText}>{t('disease.start_new')}</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.resultsTitle}>Diagnosis Results</Text>
+                <Text style={styles.resultsTitle}>{t('disease.results_title')}</Text>
                 <Text style={styles.resultsSubtitle}>
                     Based on {selectedSymptoms.length} symptom(s) for {selectedCrop}
                 </Text>
@@ -171,8 +188,7 @@ const DiseaseScreen = () => {
                 {diagnosis.length === 0 ? (
                     <View style={styles.noResults}>
                         <Ionicons name="help-circle-outline" size={60} color="#ccc" />
-                        <Text style={styles.noResultsText}>No matching diseases found</Text>
-                        <Text style={styles.noResultsHint}>Try selecting different symptoms or contact an expert</Text>
+                        <Text style={styles.noResultsText}>{t('disease.no_match')}</Text>
                     </View>
                 ) : (
                     diagnosis.map((disease, index) => (
@@ -186,7 +202,7 @@ const DiseaseScreen = () => {
                                         {disease.severity === 'high' ? '⚠️ High' : '⚡ Medium'}
                                     </Text>
                                 </View>
-                                <Text style={styles.matchText}>{Math.round(disease.matchPercentage)}% match</Text>
+                                <Text style={styles.matchText}>{disease.matchPercentage}% match</Text>
                             </View>
 
                             <Text style={styles.diseaseName}>{disease.name}</Text>
@@ -200,22 +216,22 @@ const DiseaseScreen = () => {
                             </View>
 
                             <View style={styles.section}>
-                                <Text style={styles.sectionTitle}>🌿 Organic Treatment</Text>
+                                <Text style={styles.sectionTitle}>🌿 {t('disease.organic_treatment')}</Text>
                                 <Text style={styles.treatmentText}>{disease.treatment.organic}</Text>
                             </View>
 
                             <View style={styles.section}>
-                                <Text style={styles.sectionTitle}>💊 Chemical Treatment</Text>
+                                <Text style={styles.sectionTitle}>💊 {t('disease.chemical_treatment')}</Text>
                                 <Text style={styles.treatmentText}>{disease.treatment.chemical}</Text>
                             </View>
 
                             <View style={styles.section}>
-                                <Text style={styles.sectionTitle}>🛡️ Prevention</Text>
+                                <Text style={styles.sectionTitle}>🛡️ {t('disease.prevention')}</Text>
                                 <Text style={styles.treatmentText}>{disease.treatment.preventive}</Text>
                             </View>
 
                             {disease.season && (
-                                <Text style={styles.seasonText}>Common in: {disease.season}</Text>
+                                <Text style={styles.seasonText}>{t('disease.season')}: {disease.season}</Text>
                             )}
                         </View>
                     ))
@@ -223,7 +239,7 @@ const DiseaseScreen = () => {
 
                 {/* Preventive Tips */}
                 <View style={styles.tipsCard}>
-                    <Text style={styles.tipsTitle}>💡 Preventive Tips for {selectedCrop}</Text>
+                    <Text style={styles.tipsTitle}>💡 {t('disease.prevention')} - {selectedCrop}</Text>
                     {preventiveTips.map((tip, i) => (
                         <Text key={i} style={styles.tipItem}>• {tip}</Text>
                     ))}
@@ -231,7 +247,7 @@ const DiseaseScreen = () => {
 
                 {/* Emergency Contacts */}
                 <View style={styles.emergencyCard}>
-                    <Text style={styles.emergencyTitle}>🚨 Need Expert Help?</Text>
+                    <Text style={styles.emergencyTitle}>🚨 {t('disease.expert_help')}</Text>
                     {Object.values(emergencyContacts).map((contact, i) => (
                         <View key={i} style={styles.contactItem}>
                             <Text style={styles.contactName}>{contact.name}</Text>
@@ -252,7 +268,7 @@ const DiseaseScreen = () => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Ionicons name="medkit" size={28} color="#2e7d32" />
-                <Text style={styles.headerTitle}>Plant Clinic</Text>
+                <Text style={styles.headerTitle}>{t('disease.title')}</Text>
             </View>
 
             {step === 1 && renderCropSelection()}

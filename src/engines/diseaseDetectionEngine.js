@@ -18,6 +18,7 @@ import DISEASES_DATA from '../data/diseases.json';
  * @returns {Array<string>} - List of crop names
  */
 export const getAvailableCrops = () => {
+    if (!DISEASES_DATA) return [];
     return Object.keys(DISEASES_DATA).filter(crop => crop !== 'general');
 };
 
@@ -27,6 +28,7 @@ export const getAvailableCrops = () => {
  * @returns {Array<Object>} - List of diseases/pests with details
  */
 export const getDiseasesByCrop = (cropName) => {
+    if (!DISEASES_DATA) return [];
     const cropData = DISEASES_DATA[cropName.toLowerCase()] || [];
     const generalData = DISEASES_DATA['general'] || [];
     return [...cropData, ...generalData];
@@ -42,33 +44,41 @@ export const diagnoseBySymptoms = (cropName, selectedSymptoms) => {
     const diseases = getDiseasesByCrop(cropName);
 
     if (!selectedSymptoms || selectedSymptoms.length === 0) {
-        return diseases; // Return all if no symptoms selected
+        return []; // Return empty if no symptoms selected (changed from returning all)
     }
 
     // Calculate match score for each disease
     const scoredDiseases = diseases.map(disease => {
-        let matchCount = 0;
-        const symptomsLower = disease.symptoms.map(s => s.toLowerCase());
+        if (!disease.symptoms) return { ...disease, matchScore: 0, matchPercentage: 0 };
 
-        // Check how many selected symptoms match
+        let matchCount = 0;
+        const diseaseSymptomsLower = disease.symptoms.map(s => s.toLowerCase());
+
+        // Count matches (Intersection)
         selectedSymptoms.forEach(selected => {
             const selectedLower = selected.toLowerCase();
-            if (symptomsLower.some(s => s.includes(selectedLower) || selectedLower.includes(s))) {
+            // Check for fuzzy match
+            if (diseaseSymptomsLower.some(s => s.includes(selectedLower) || selectedLower.includes(s))) {
                 matchCount++;
             }
         });
 
+        // Jaccard Similarity: Intersection / Union
+        // Union = (Selected Symptoms Count + Disease Symptoms Count) - Intersection
+        const unionCount = (selectedSymptoms.length + disease.symptoms.length) - matchCount;
+        const matchPercentage = unionCount > 0 ? (matchCount / unionCount) * 100 : 0;
+
         return {
             ...disease,
-            matchScore: matchCount,
-            matchPercentage: (matchCount / selectedSymptoms.length) * 100
+            matchScore: matchCount, // Keep raw count for debugging/sorting tie-breakers
+            matchPercentage: Math.round(matchPercentage)
         };
     });
 
-    // Sort by match score (highest first)
+    // Sort by match percentage (descending)
     return scoredDiseases
-        .filter(d => d.matchScore > 0)
-        .sort((a, b) => b.matchScore - a.matchScore);
+        .filter(d => d.matchPercentage > 0)
+        .sort((a, b) => b.matchPercentage - a.matchPercentage);
 };
 
 /**
@@ -78,7 +88,7 @@ export const diagnoseBySymptoms = (cropName, selectedSymptoms) => {
  */
 export const getCommonSymptoms = (cropName) => {
     const diseases = getDiseasesByCrop(cropName);
-    const allSymptoms = diseases.flatMap(d => d.symptoms);
+    const allSymptoms = diseases.flatMap(d => d.symptoms || []);
 
     // Remove duplicates and return
     return [...new Set(allSymptoms)].sort();
@@ -90,6 +100,7 @@ export const getCommonSymptoms = (cropName) => {
  * @returns {Object|null} - Disease details or null if not found
  */
 export const getDiseaseById = (diseaseId) => {
+    if (!DISEASES_DATA) return null;
     for (const crop in DISEASES_DATA) {
         const disease = DISEASES_DATA[crop].find(d => d.id === diseaseId);
         if (disease) return disease;
