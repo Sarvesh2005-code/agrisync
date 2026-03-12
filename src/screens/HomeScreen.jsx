@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, FlatList, Alert, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { RegionDetectionEngine } from '../engines/regionDetectionEngine';
@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DAILY_TIPS from '../data/dailyTips.json';
 import { getCropTimeline, getUpcomingTasks, getHarvestInfo, getCropData, getRecommendation } from '../data/cropDatabase';
+import Logger from '../utils/logger';
 
 // Import local illustrations
 const Illustrations = {
@@ -65,7 +66,7 @@ const HomeScreen = () => {
             await refreshNotifications(crops);
 
         } catch (e) {
-            console.error(e);
+            Logger.error(e, 'HomeScreen Data Load');
         } finally {
             setRefreshing(false);
         }
@@ -79,7 +80,7 @@ const HomeScreen = () => {
                 setUserName(parsed.name || 'Farmer');
             }
         } catch (e) {
-            console.error('Failed to load user profile:', e);
+            Logger.error(e, 'Failed to load user profile');
         }
     };
 
@@ -93,24 +94,28 @@ const HomeScreen = () => {
             }
             return [];
         } catch (e) {
-            console.error('Failed to load user crops:', e);
+            Logger.error(e, 'Failed to load user crops');
             return [];
         }
     };
 
-    const loadRandomTip = () => {
+    const loadRandomTip = useCallback(() => {
         const randomIndex = Math.floor(Math.random() * DAILY_TIPS.length);
         setCurrentTip(DAILY_TIPS[randomIndex]);
-    };
+    }, []);
 
     const refreshNotifications = async (crops = userCrops) => {
-        const notifs = await NotificationEngine.getRecents(crops);
-        setNotifications(notifs);
-        const count = await NotificationEngine.getUnreadCount(crops);
-        setUnreadCount(count);
+        try {
+            const notifs = await NotificationEngine.getRecents(crops);
+            setNotifications(notifs);
+            const count = await NotificationEngine.getUnreadCount(crops);
+            setUnreadCount(count);
+        } catch (e) {
+            Logger.error(e, 'HomeScreen Refresh Notifs');
+        }
     };
 
-    const handleNotificationPress = async (item) => {
+    const handleNotificationPress = useCallback(async (item) => {
         Alert.alert(
             item.title,
             item.body,
@@ -133,17 +138,17 @@ const HomeScreen = () => {
         // Auto mark as read on open, if preferred
         await NotificationEngine.markAsRead(item.id);
         await refreshNotifications();
-    };
+    }, [userCrops]);
 
-    const getSeverityIcon = (severity) => {
+    const getSeverityIcon = useCallback((severity) => {
         return severity === 'high' ? 'alert-circle' : 'information-circle';
-    };
+    }, []);
 
-    const getSeverityColor = (severity) => {
+    const getSeverityColor = useCallback((severity) => {
         return severity === 'high' ? '#d32f2f' : '#f57c00';
-    };
+    }, []);
 
-    const renderQuickAction = (icon, label, route) => (
+    const renderQuickAction = useCallback((icon, label, route) => (
         <TouchableOpacity
             style={styles.actionBtn}
             onPress={() => navigation.navigate(route)}
@@ -154,9 +159,9 @@ const HomeScreen = () => {
             </View>
             <Text style={styles.actionLabel}>{label}</Text>
         </TouchableOpacity>
-    );
+    ), [navigation]);
 
-    const renderNotificationItem = ({ item }) => (
+    const renderNotificationItem = useCallback(({ item }) => (
         <TouchableOpacity style={styles.notifItem} onPress={() => handleNotificationPress(item)}>
             <View style={[styles.notifIcon, { backgroundColor: item.type === 'weather' ? '#e3f2fd' : '#fff3e0' }]}>
                 <Ionicons
@@ -174,7 +179,7 @@ const HomeScreen = () => {
                 <Text style={styles.notifTime}>{item.timestamp}</Text>
             </View>
         </TouchableOpacity>
-    );
+    ), [handleNotificationPress]);
 
     return (
         <ScrollView

@@ -6,6 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MainNavigator from './navigation/MainNavigator';
 import LoginScreen from './screens/LoginScreen';
 import ErrorBoundary from './components/ErrorBoundary';
+import OfflineBanner from './components/OfflineBanner';
+import Logger from './utils/logger';
 import { initDB } from './db/initDB';
 import './localization/i18n';
 
@@ -25,9 +27,10 @@ export default function App() {
             // Check if user profile exists
             const profile = await AsyncStorage.getItem('user-profile');
             setIsAuthenticated(!!profile);
+            Logger.info('App initialized successfully');
 
         } catch (e) {
-            console.warn('Initialization error:', e);
+            Logger.error(e, 'App Initialization');
         } finally {
             setIsReady(true);
         }
@@ -51,6 +54,7 @@ export default function App() {
         return (
             <ErrorBoundary>
                 <SafeAreaProvider>
+                    <OfflineBanner />
                     <LoginScreen onLoginSuccess={handleLoginSuccess} />
                 </SafeAreaProvider>
             </ErrorBoundary>
@@ -60,6 +64,7 @@ export default function App() {
     return (
         <ErrorBoundary>
             <SafeAreaProvider>
+                <OfflineBanner />
                 <NavigationContainer>
                     <MainNavigator />
                 </NavigationContainer>
