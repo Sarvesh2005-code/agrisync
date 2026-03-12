@@ -32,6 +32,12 @@
     },
     "plugins": [
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9c94984f-a094-4fb5-9597-b20cededbdef"
+      }
+    },
+    "owner": "sarvy"
   }
 }
