@@ -1,45 +1,55 @@
-# AgriSync 🌱
+# 🌾 AgriSync — Smart Farming Assistant
 
-AgriSync is a comprehensive digital farming assistant designed to empower farmers with real-time insights, crop management tools, and AI-driven advice. Use it to track crop health, receive timely alerts, and optimize your farming practices.
+AgriSync is an offline-first mobile app that empowers Indian farmers with AI-powered crop advisory, disease diagnosis, soil management, and weather insights — all in their local language.
 
-## Features
+## ✨ Features
 
-- **🌾 Dynamic Crop Management**: Track multiple crops with personalized timelines, showing growth stages and harvest countdowns.
-- **📅 Visual Task Schedule**: Daily farming tasks (Watering, Fertilizer, etc.) presented as easy-to-understand visual cards.
-- **🖼️ Visual Task Guides**: Accessibility-focused step-by-step guides with illustrations for farming activities.
-- **🤖 Agri Sahayak (AI Assistant)**: A smart chatbot with a friendly mascot to answer your farming queries in multiple languages.
-- **🌦️ Weather Integration**: Real-time weather updates and 48-hour farming insights based on your location.
-- **🚨 Pest & Disease Alerts**: Early warning system for potential crop threats.
-- **📶 Offline Capabilities**: Essential features work even without an active internet connection.
-- **🌍 Multi-language Support**: Available in English and Marathi.
+| Feature | Description |
+|---|---|
+| 🏠 **Smart Dashboard** | Weather, crop alerts, market prices, and quick actions |
+| 🌱 **Crop Tracker** | Track sowing-to-harvest timeline for your crops |
+| 🔬 **Plant Clinic** | Diagnose crop diseases by selecting symptoms |
+| 🌍 **Soil Info** | Detailed soil analysis, treatments, and fertilizer plans |
+| 🤖 **AI Assistant** | Ask farming questions (online via Gemini AI + offline fallback) |
+| 🌐 **Multilingual** | English, Hindi, and Marathi support |
+| 📶 **Offline-First** | Works without internet — all core features run locally |
 
-## Tech Stack
+## 📱 Download
 
-- **Framework**: React Native (Expo)
-- **Language**: JavaScript
-- **State Management**: React Hooks & Context
-- **Storage**: AsyncStorage & SQLite
-- **Navigation**: React Navigation
-- **Localization**: i18next
+Download the latest APK from [**GitHub Releases**](https://github.com/Sarvesh2005-code/agrisync/releases).
 
-## Getting Started
+## 🛠️ Tech Stack
 
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/Sarvesh2005-code/agrisync.git
-    cd agrisync
-    ```
+- **Framework:** React Native (Expo SDK 54)
+- **Navigation:** React Navigation
+- **State:** Zustand + AsyncStorage
+- **AI:** Google Gemini 1.5 Flash (with offline fallback)
+- **i18n:** i18next
+- **Database:** Expo SQLite
 
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
+## 🚀 Getting Started
 
-3.  **Run the application**:
-    ```bash
-    npx expo start
-    ```
+```bash
+# Install dependencies
+npm install
 
-4.  **Run on Device**: Use the Expo Go app to scan the QR code, or run on Android Emulator/iOS Simulator.
+# Start the development server
+npx expo start
 
+# Run on Android
+npx expo start --android
+```
 
+## 📦 Building APK
+
+```bash
+# Login to your Expo account
+npx eas-cli login
+
+# Build Android APK
+npx eas-cli build -p android --profile preview
+```
+
+## 📄 License
+
+MIT License — built with ❤️ for farmers.

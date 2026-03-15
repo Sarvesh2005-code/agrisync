@@ -3,6 +3,8 @@
  * Provides comprehensive soil data, recommendations, and best practices
  */
 
+import Logger from '../utils/logger';
+
 // Comprehensive soil type database
 const SOIL_TYPES = {
     'Black Cotton Soil': {
@@ -238,7 +240,7 @@ export const SoilEngine = {
 
             return SoilEngine.getSoilDetails(soilType);
         } catch (e) {
-            console.error('Soil info error:', e);
+            Logger.error(e, 'SoilEngine getSoilInfo');
             return SoilEngine.getSoilDetails(REGIONAL_SOIL_MAP['default']);
         }
     },

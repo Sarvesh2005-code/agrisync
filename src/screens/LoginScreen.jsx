@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGES } from '../utils/constants';
+import Logger from '../utils/logger';
 
 const LoginScreen = ({ onLoginSuccess }) => {
     const { t, i18n } = useTranslation();
@@ -91,7 +92,7 @@ const LoginScreen = ({ onLoginSuccess }) => {
                 onLoginSuccess();
             }
         } catch (e) {
-            console.error('Sign up error:', e);
+            Logger.error(e, 'LoginScreen SignUp');
             setLoading(false);
             Alert.alert('Error', 'Failed to create account. Please try again.');
         }
@@ -148,7 +149,7 @@ const LoginScreen = ({ onLoginSuccess }) => {
                 Alert.alert('Invalid', 'Phone number does not match our records.');
             }
         } catch (e) {
-            console.error('Sign in error:', e);
+            Logger.error(e, 'LoginScreen SignIn');
             setLoading(false);
             Alert.alert('Error', 'Failed to sign in. Please try again.');
         }

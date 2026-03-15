@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Logger from '../utils/logger';
 import en from './en.json';
 import hi from './hi.json';
 import mr from './mr.json';
@@ -20,7 +21,7 @@ const LANGUAGE_DETECTOR = {
             const language = storedLanguage || 'en';
             callback(language);
         } catch (error) {
-            console.log('Error reading language', error);
+            Logger.debug('Error reading language', error);
             callback('en');
         }
     },
@@ -29,7 +30,7 @@ const LANGUAGE_DETECTOR = {
         try {
             await AsyncStorage.setItem('user-language', language);
         } catch (error) {
-            console.log('Error saving language', error);
+            Logger.debug('Error saving language', error);
         }
     },
 };

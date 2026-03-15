@@ -1,41 +1,48 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Insight48hEngine } from '../engines/insight48hEngine';
 import { Ionicons } from '@expo/vector-icons';
+import Logger from '../utils/logger';
+
+// Demo crops moved outside component to avoid re-creation on every render
+const DEMO_CROPS = [
+    { name: 'wheat', sowingDate: '2023-10-15', stage: 'Vegetative' },
+    { name: 'rice', sowingDate: '2023-08-01', stage: 'Flowering' }
+];
 
 const Insight48hScreen = () => {
     const { t } = useTranslation();
     const [insights, setInsights] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
-
-    // Mock crops for demo if none exist
-    const DEMO_CROPS = [
-        { name: 'wheat', sowingDate: '2023-10-15', stage: 'Vegetative' },
-        { name: 'rice', sowingDate: '2023-08-01', stage: 'Flowering' }
-    ];
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadInsights();
     }, []);
 
-    const loadInsights = async () => {
+    const loadInsights = useCallback(async () => {
         setRefreshing(true);
-        // In production, fetch actual user crops from DB
-        const data = await Insight48hEngine.generateInsights(DEMO_CROPS);
-        setInsights(data);
-        setRefreshing(false);
-    };
+        try {
+            const data = await Insight48hEngine.generateInsights(DEMO_CROPS);
+            setInsights(data);
+        } catch (e) {
+            Logger.error(e, 'Insight48hScreen loadInsights');
+        } finally {
+            setRefreshing(false);
+            setLoading(false);
+        }
+    }, []);
 
-    const getSeverityColor = (severity) => {
+    const getSeverityColor = useCallback((severity) => {
         switch (severity) {
             case 'high': return '#d32f2f';
             case 'medium': return '#f57c00';
             default: return '#388e3c';
         }
-    };
+    }, []);
 
-    const getIcon = (type) => {
+    const getIcon = useCallback((type) => {
         switch (type) {
             case 'irrigation': return 'water';
             case 'pest': return 'bug';
@@ -43,7 +50,16 @@ const Insight48hScreen = () => {
             case 'weather': return 'sunny';
             default: return 'notifications';
         }
-    };
+    }, []);
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2e7d32" />
+                <Text style={styles.loadingText}>Loading insights...</Text>
+            </View>
+        );
+    }
 
     return (
         <ScrollView
@@ -57,7 +73,11 @@ const Insight48hScreen = () => {
 
             <View style={styles.timeline}>
                 {insights.length === 0 ? (
-                    <Text style={styles.empty}>No alerts for now. Everything looks good!</Text>
+                    <View style={styles.emptyContainer}>
+                        <Ionicons name="checkmark-circle" size={60} color="#4caf50" />
+                        <Text style={styles.emptyTitle}>All Good! 🌾</Text>
+                        <Text style={styles.emptyText}>No alerts for now. Everything looks good!</Text>
+                    </View>
                 ) : (
                     insights.map((item, index) => (
                         <View key={index} style={styles.card}>
@@ -84,6 +104,17 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#666',
+        fontSize: 16,
     },
     header: {
         padding: 20,
@@ -149,11 +180,21 @@ const styles = StyleSheet.create({
         color: '#333',
         lineHeight: 22,
     },
-    empty: {
-        textAlign: 'center',
-        marginTop: 50,
+    emptyContainer: {
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    emptyTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#333',
+        marginTop: 15,
+    },
+    emptyText: {
         color: '#999',
-    }
+        marginTop: 8,
+        fontSize: 15,
+    },
 });
 
 export default Insight48hScreen;

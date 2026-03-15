@@ -6,25 +6,24 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#2e7d32"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.agrisync.app"
     },
     "android": {
       "package": "com.agrisync.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
+        "backgroundColor": "#2e7d32"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -34,6 +33,7 @@
       "expo-sqlite"
     ],
     "extra": {
+      "geminiApiKey": "AIzaSyCDAJSotv9yEcVfvc_g3oRstsS6B6s9KUA",
       "eas": {
         "projectId": "9c94984f-a094-4fb5-9597-b20cededbdef"
       }

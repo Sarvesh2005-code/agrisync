@@ -5,6 +5,7 @@ import { SoilEngine } from '../engines/soilEngine';
 import { RegionDetectionEngine } from '../engines/regionDetectionEngine';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Logger from '../utils/logger';
 
 const SOIL_TYPES = [
     'Alluvial Soil',
@@ -45,7 +46,7 @@ const SoilScreen = () => {
                 setSelectedSoilType(info.type);
             }
         } catch (e) {
-            console.error('Failed to load soil data:', e);
+            Logger.error(e, 'SoilScreen Load');
         } finally {
             setLoading(false);
         }
@@ -61,7 +62,7 @@ const SoilScreen = () => {
         try {
             await AsyncStorage.setItem('soil-preference', newType);
         } catch (e) {
-            console.error('Failed to save soil preference:', e);
+            Logger.error(e, 'SoilScreen SavePreference');
         }
     };
 

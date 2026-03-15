@@ -2,6 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import { SCHEMA } from './schema';
 import { DB_NAME } from '../utils/constants';
 import { seedDatabase } from '../data/seedData';
+import Logger from '../utils/logger';
 
 let dbInstance = null;
 
@@ -20,16 +21,16 @@ export const initDB = async () => {
 
         // Create tables
         for (const [tableName, query] of Object.entries(SCHEMA)) {
-            console.log(`Creating table: ${tableName}`);
+            Logger.debug(`Creating table: ${tableName}`);
             await db.execAsync(query);
         }
 
         await seedDatabase();
 
-        console.log('Database initialized successfully');
+        Logger.info('Database initialized successfully');
         return true;
     } catch (error) {
-        console.error('Database initialization failed:', error);
+        Logger.error(error, 'Database Initialization');
         return false;
     }
 };
@@ -38,9 +39,8 @@ export const clearDB = async () => {
     try {
         const db = await getDB();
         // Logic to clear tables if needed
-        // This is a placeholder
-        console.log('Clear DB not fully implemented');
+        Logger.warn('Clear DB not fully implemented');
     } catch (e) {
-        console.error(e);
+        Logger.error(e, 'Clear DB');
     }
 }

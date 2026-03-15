@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { AiAssistantEngine } from '../engines/aiAssistantEngine';
 import NetInfo from '@react-native-community/netinfo';
+import Logger from '../utils/logger';
 
 const AiAssistantScreen = () => {
     const { t, i18n } = useTranslation();
@@ -39,7 +40,7 @@ const AiAssistantScreen = () => {
             const botMsg = { id: (Date.now() + 1).toString(), text: response, sender: 'bot' };
             setMessages(prev => [...prev, botMsg]);
         } catch (e) {
-            console.error(e);
+            Logger.error(e, 'AiAssistantScreen');
         } finally {
             setLoading(false);
             setStatusText('');

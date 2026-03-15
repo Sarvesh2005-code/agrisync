@@ -7,6 +7,7 @@
 
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Logger from '../utils/logger';
 
 // India state coordinates for reverse geocoding (simplified)
 const INDIA_STATES = {
@@ -98,7 +99,7 @@ export const RegionDetectionEngine = {
                 source: 'default'
             };
         } catch (error) {
-            console.error('Region detection failed:', error);
+            Logger.error(error, 'RegionDetection');
 
             // Return cached or default
             try {
@@ -107,7 +108,7 @@ export const RegionDetectionEngine = {
                     return { ...JSON.parse(cached), source: 'cached' };
                 }
             } catch (e) {
-                console.error('Cache read failed:', e);
+                Logger.error(e, 'RegionDetection CacheRead');
             }
 
             return {
@@ -146,7 +147,7 @@ export const RegionDetectionEngine = {
                     district = reverseGeocode[0].subregion || reverseGeocode[0].city || reverseGeocode[0].district || 'Unknown';
                 }
             } catch (e) {
-                console.log('Reverse geocoding failed, using state capital');
+                Logger.info('Reverse geocoding failed, using state capital');
                 // Use state capital as fallback
                 district = detectedState.split(' ')[0]; // Simplified
             }
@@ -157,7 +158,7 @@ export const RegionDetectionEngine = {
                 coordinates: { latitude: lat, longitude: lon }
             };
         } catch (error) {
-            console.error('Coordinate mapping failed:', error);
+            Logger.error(error, 'RegionDetection CoordinateMapping');
             return null;
         }
     },
@@ -175,7 +176,7 @@ export const RegionDetectionEngine = {
             await AsyncStorage.setItem('manual-location', JSON.stringify(locationData));
             return true;
         } catch (error) {
-            console.error('Failed to save manual location:', error);
+            Logger.error(error, 'RegionDetection SaveManual');
             return false;
         }
     },
@@ -188,7 +189,7 @@ export const RegionDetectionEngine = {
             await AsyncStorage.removeItem('manual-location');
             return true;
         } catch (error) {
-            console.error('Failed to clear manual location:', error);
+            Logger.error(error, 'RegionDetection ClearManual');
             return false;
         }
     },

@@ -18,6 +18,8 @@
  */
 
 import { CROPS } from '../utils/constants';
+import Constants from 'expo-constants';
+import Logger from '../utils/logger';
 
 /**
  * Offline Knowledge Base for farming queries
@@ -66,10 +68,11 @@ const KNOWLEDGE_BASE = {
 // Delay to simulate AI "thinking" if offline
 const SIMULATE_DELAY = 800;
 
-// Gemini API Configuration
-// NOTE: Replace with your actual Gemini API Key
-const GEMINI_API_KEY = "AIzaSyCDAJSotv9yEcVfvc_g3oRstsS6B6s9KUA";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+// Gemini API Configuration — key loaded from app config (not hardcoded)
+const GEMINI_API_KEY = Constants.expoConfig?.extra?.geminiApiKey || '';
+const GEMINI_URL = GEMINI_API_KEY 
+    ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
+    : '';
 
 export const AiAssistantEngine = {
     /**
@@ -115,7 +118,7 @@ export const AiAssistantEngine = {
                 }
             }
         } catch (error) {
-            console.log("Offline or API Error, falling back to local DB:", error);
+            Logger.info("Offline or API Error, falling back to local DB:", error.message);
         }
 
         // 3. Fallback to Offline Knowledge Base

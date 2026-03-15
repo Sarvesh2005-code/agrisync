@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { CROPS } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
+import Logger from '../utils/logger';
 
 const STORAGE_KEY = 'user-crops';
 
@@ -11,18 +12,19 @@ const CropScreen = () => {
     const { t } = useTranslation();
     const [myCrops, setMyCrops] = useState([]);
     const [showAdd, setShowAdd] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     // Load crops on mount
     useEffect(() => {
         loadCrops();
     }, []);
 
-    // Save crops whenever they change
+    // Save crops whenever they change — but only after initial load
     useEffect(() => {
-        if (myCrops.length > 0) {
+        if (isLoaded) {
             saveCrops();
         }
-    }, [myCrops]);
+    }, [myCrops, isLoaded]);
 
     const loadCrops = async () => {
         try {
@@ -31,7 +33,9 @@ const CropScreen = () => {
                 setMyCrops(JSON.parse(stored));
             }
         } catch (e) {
-            console.error('Failed to load crops:', e);
+            Logger.error(e, 'CropScreen Load');
+        } finally {
+            setIsLoaded(true);
         }
     };
 
@@ -39,7 +43,7 @@ const CropScreen = () => {
         try {
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(myCrops));
         } catch (e) {
-            console.error('Failed to save crops:', e);
+            Logger.error(e, 'CropScreen Save');
         }
     };
 

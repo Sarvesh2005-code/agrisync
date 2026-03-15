@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LANGUAGES } from '../utils/constants';
 import { RegionDetectionEngine } from '../engines/regionDetectionEngine';
+import Logger from '../utils/logger';
 
 const SettingsScreen = () => {
     const { t, i18n } = useTranslation();
@@ -48,7 +49,7 @@ const SettingsScreen = () => {
                 setUser(JSON.parse(stored));
             }
         } catch (e) {
-            console.error('Failed to load profile:', e);
+            Logger.error(e, 'SettingsScreen LoadProfile');
         }
     };
 
@@ -86,7 +87,7 @@ const SettingsScreen = () => {
             const source = await RegionDetectionEngine.getLocationSource();
             setLocationSource(source);
         } catch (e) {
-            console.error('Failed to load location:', e);
+            Logger.error(e, 'SettingsScreen LoadLocation');
         }
     };
 
@@ -108,7 +109,7 @@ const SettingsScreen = () => {
 
             Alert.alert('Success', `Location detected: ${region.district}, ${region.state}`);
         } catch (e) {
-            console.error('GPS detection failed:', e);
+            Logger.error(e, 'SettingsScreen GPS');
             Alert.alert('Error', 'Failed to detect location. Please check GPS permissions.');
         } finally {
             setLoadingLocation(false);

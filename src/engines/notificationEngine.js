@@ -14,6 +14,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Logger from '../utils/logger';
 
 const STORAGE_KEY = 'notifications_v1';
 
@@ -50,7 +51,7 @@ export const NotificationEngine = {
                 !alert.dismissed
             );
         } catch (e) {
-            console.error('Notif Error', e);
+            Logger.error(e, 'NotificationEngine getRecents');
             return [];
         }
     },
@@ -66,32 +67,39 @@ export const NotificationEngine = {
             let all = stored ? JSON.parse(stored) : [];
             const updated = all.map(n => n.id === id ? { ...n, read: true } : n);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            Logger.error(e, 'NotificationEngine markAsRead');
+        }
     },
 
     dismiss: async (id) => {
         try {
             const stored = await AsyncStorage.getItem(STORAGE_KEY);
             let all = stored ? JSON.parse(stored) : [];
-            // Mark as dismissed, persisting state
             const updated = all.map(n => n.id === id ? { ...n, dismissed: true } : n);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            Logger.error(e, 'NotificationEngine dismiss');
+        }
     },
 
-    // Simulate Receive
     triggerMockAlert: async (title, body, type, crop = 'all') => {
-        const newAlert = {
-            id: Date.now().toString(),
-            title, body, type, crop,
-            timestamp: 'Just now',
-            read: false,
-            dismissed: false
-        };
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
-        let all = stored ? JSON.parse(stored) : [];
-        all.unshift(newAlert);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-        return newAlert;
+        try {
+            const newAlert = {
+                id: Date.now().toString(),
+                title, body, type, crop,
+                timestamp: 'Just now',
+                read: false,
+                dismissed: false
+            };
+            const stored = await AsyncStorage.getItem(STORAGE_KEY);
+            let all = stored ? JSON.parse(stored) : [];
+            all.unshift(newAlert);
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+            return newAlert;
+        } catch (e) {
+            Logger.error(e, 'NotificationEngine triggerMockAlert');
+            return null;
+        }
     }
 };
