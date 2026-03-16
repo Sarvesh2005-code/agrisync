@@ -82,7 +82,7 @@ const AiAssistantScreen = () => {
         <View style={[styles.msgContainer, item.sender === 'user' ? styles.msgUser : styles.msgBot]}>
             {item.sender === 'bot' && (
                 <View style={styles.botIcon}>
-                    <Image source={require('../../assets/illustrations/mascot.png')} style={styles.botAvatar} resizeMode="contain" />
+                    <Image source={require('../../assets/illustrations/mascot.jpg')} style={styles.botAvatar} resizeMode="contain" />
                 </View>
             )}
             <View style={[styles.msgBubble, item.sender === 'user' ? styles.bubbleUser : styles.bubbleBot]}>

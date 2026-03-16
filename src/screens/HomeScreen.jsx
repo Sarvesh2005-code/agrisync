@@ -14,11 +14,11 @@ import Logger from '../utils/logger';
 
 // Import local illustrations
 const Illustrations = {
-    watering: require('../../assets/illustrations/watering.png'),
-    fertilizer: require('../../assets/illustrations/fertilizer.png'),
-    harvest: require('../../assets/illustrations/harvest.png'),
-    seedling: require('../../assets/illustrations/seedling.png'),
-    vegetative: require('../../assets/illustrations/vegetative.png'),
+    watering: require('../../assets/illustrations/watering.jpg'),
+    fertilizer: require('../../assets/illustrations/fertilizer.jpg'),
+    harvest: require('../../assets/illustrations/harvest.jpg'),
+    seedling: require('../../assets/illustrations/seedling.jpg'),
+    vegetative: require('../../assets/illustrations/vegetative.jpg'),
 };
 
 const HomeScreen = () => {
