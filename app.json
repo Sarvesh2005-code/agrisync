@@ -33,7 +33,7 @@
       "expo-sqlite"
     ],
     "extra": {
-      "geminiApiKey": "AIzaSyCDAJSotv9yEcVfvc_g3oRstsS6B6s9KUA",
+      "geminiApiKey": "",
       "eas": {
         "projectId": "9c94984f-a094-4fb5-9597-b20cededbdef"
       }
