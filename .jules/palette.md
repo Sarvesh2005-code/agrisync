@@ -1,0 +1,3 @@
+## 2024-05-17 - Missing Accessibility Labels on Icon-Only Buttons
+**Learning:** Found that multiple icon-only interactive elements (`TouchableOpacity`) in this app (like the AiAssistantScreen input area) lack `accessibilityLabel` attributes, making them inaccessible to screen readers.
+**Action:** Always ensure that every icon-only `TouchableOpacity` or interactive component in this design system includes a descriptive `accessibilityLabel` attribute so screen readers can correctly identify its purpose.
