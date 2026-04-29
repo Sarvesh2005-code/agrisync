@@ -1,0 +1,3 @@
+## 2024-05-01 - [Preventing Redundant AsyncStorage I/O in Engines]
+**Learning:** This codebase's architecture often uses Engine methods that perform AsyncStorage I/O (like `getUnreadCount` and `getRecents`). Calling them sequentially can lead to redundant storage reads.
+**Action:** When a method needs data that another method just fetched, modify the second method to accept pre-fetched data as an optional argument to bypass the redundant AsyncStorage read.
