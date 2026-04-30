@@ -18,7 +18,6 @@
  */
 
 import { CROPS } from '../utils/constants';
-import Constants from 'expo-constants';
 import Logger from '../utils/logger';
 
 /**
@@ -68,8 +67,8 @@ const KNOWLEDGE_BASE = {
 // Delay to simulate AI "thinking" if offline
 const SIMULATE_DELAY = 800;
 
-// Gemini API Configuration — key loaded from environment variables or app config
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.geminiApiKey || '';
+// Gemini API Configuration — key loaded from environment variables
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
 const GEMINI_URL = GEMINI_API_KEY 
     ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
     : '';
