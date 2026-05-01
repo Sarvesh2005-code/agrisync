@@ -108,7 +108,8 @@ const HomeScreen = () => {
         try {
             const notifs = await NotificationEngine.getRecents(crops);
             setNotifications(notifs);
-            const count = await NotificationEngine.getUnreadCount(crops);
+            // Pass the already fetched notifications to avoid redundant AsyncStorage reads
+            const count = await NotificationEngine.getUnreadCount(crops, notifs);
             setUnreadCount(count);
         } catch (e) {
             Logger.error(e, 'HomeScreen Refresh Notifs');
