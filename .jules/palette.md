@@ -1,0 +1,3 @@
+## 2024-05-01 - Missing ARIA Labels on AI Assistant Input
+**Learning:** Icon-only inputs (like camera, mic, and send buttons) in conversational interfaces are a common pattern but represent a severe accessibility failure for screen reader users if missing context. In `AiAssistantScreen`, users relying on assistive technology would only hear "button" for critical interaction points.
+**Action:** Always provide explicit `accessibilityLabel`, `accessibilityHint`, and `accessibilityRole` on interactive elements, especially standalone icons used for primary actions like sending messages, activating voice input, or taking pictures.
