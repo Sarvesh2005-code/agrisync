@@ -247,7 +247,13 @@ const HomeScreen = () => {
                 <View style={styles.tipHeader}>
                     <Ionicons name="bulb" size={20} color="#fff" />
                     <Text style={styles.tipTitle}>Daily Tip</Text>
-                    <TouchableOpacity onPress={loadRandomTip} style={styles.refreshTip}>
+                    <TouchableOpacity
+                        onPress={loadRandomTip}
+                        style={styles.refreshTip}
+                        accessibilityRole="button"
+                        accessibilityLabel="Refresh Daily Tip"
+                        accessibilityHint="Loads a new farming tip"
+                    >
                         <Ionicons name="refresh" size={18} color="rgba(255,255,255,0.8)" />
                     </TouchableOpacity>
                 </View>
@@ -289,6 +295,9 @@ const HomeScreen = () => {
                                     <TouchableOpacity
                                         style={styles.cropEditBtn}
                                         onPress={() => navigation.navigate('Crop')}
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Edit Crop"
+                                        accessibilityHint="Navigates to the crop management screen"
                                     >
                                         <Ionicons name="create-outline" size={20} color="#666" />
                                     </TouchableOpacity>
@@ -375,7 +384,12 @@ const HomeScreen = () => {
                     <View style={styles.notifModal}>
                         <View style={styles.notifHeader}>
                             <Text style={styles.notifHeaderTitle}>Notifications ({unreadCount})</Text>
-                            <TouchableOpacity onPress={() => setNotifVisible(false)}>
+                            <TouchableOpacity
+                                onPress={() => setNotifVisible(false)}
+                                accessibilityRole="button"
+                                accessibilityLabel="Close Notifications"
+                                accessibilityHint="Closes the notifications panel"
+                            >
                                 <Ionicons name="close" size={24} color="#333" />
                             </TouchableOpacity>
                         </View>
