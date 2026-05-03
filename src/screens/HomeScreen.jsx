@@ -198,6 +198,7 @@ const HomeScreen = () => {
                         style={styles.bellBtn}
                         accessibilityLabel="View notifications"
                         accessibilityHint="Opens notification panel"
+                        accessibilityRole="button"
                     >
                         <Ionicons name="notifications" size={26} color="#fff" />
                         {unreadCount > 0 && (
@@ -247,7 +248,13 @@ const HomeScreen = () => {
                 <View style={styles.tipHeader}>
                     <Ionicons name="bulb" size={20} color="#fff" />
                     <Text style={styles.tipTitle}>Daily Tip</Text>
-                    <TouchableOpacity onPress={loadRandomTip} style={styles.refreshTip}>
+                    <TouchableOpacity
+                        onPress={loadRandomTip}
+                        style={styles.refreshTip}
+                        accessibilityLabel="Refresh daily tip"
+                        accessibilityHint="Loads a new random tip"
+                        accessibilityRole="button"
+                    >
                         <Ionicons name="refresh" size={18} color="rgba(255,255,255,0.8)" />
                     </TouchableOpacity>
                 </View>
@@ -289,6 +296,9 @@ const HomeScreen = () => {
                                     <TouchableOpacity
                                         style={styles.cropEditBtn}
                                         onPress={() => navigation.navigate('Crop')}
+                                        accessibilityLabel={`Edit ${crop.name} details`}
+                                        accessibilityHint="Navigates to the crop management screen"
+                                        accessibilityRole="button"
                                     >
                                         <Ionicons name="create-outline" size={20} color="#666" />
                                     </TouchableOpacity>
@@ -375,7 +385,12 @@ const HomeScreen = () => {
                     <View style={styles.notifModal}>
                         <View style={styles.notifHeader}>
                             <Text style={styles.notifHeaderTitle}>Notifications ({unreadCount})</Text>
-                            <TouchableOpacity onPress={() => setNotifVisible(false)}>
+                            <TouchableOpacity
+                                onPress={() => setNotifVisible(false)}
+                                accessibilityLabel="Close notifications"
+                                accessibilityHint="Closes the notifications panel"
+                                accessibilityRole="button"
+                            >
                                 <Ionicons name="close" size={24} color="#333" />
                             </TouchableOpacity>
                         </View>
