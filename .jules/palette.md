@@ -1,0 +1,3 @@
+## 2024-05-24 - Missing Accessibility Contexts on Icon-Only Buttons
+**Learning:** Found a common pattern in the application where icon-only `TouchableOpacity` components (such as `refreshTip`, `close` in modals, and `cropEditBtn`) lack critical accessibility attributes (`accessibilityLabel`, `accessibilityHint`, and `accessibilityRole`). This makes navigation extremely difficult for users relying on screen readers.
+**Action:** Always ensure that any interactive element that relies solely on visual icons for its affordance includes appropriate accessibility labels, hints, and roles to clearly communicate its purpose and interaction model to assistive technologies.
