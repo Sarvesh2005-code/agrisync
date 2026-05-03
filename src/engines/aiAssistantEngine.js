@@ -82,7 +82,9 @@ export const AiAssistantEngine = {
      * @returns {Promise<string>} - AI response
      */
     ask: async (query, lang = 'en') => {
-        const q = query.toLowerCase();
+        // Truncate to max 500 characters to prevent huge payload DoS
+        const safeQuery = typeof query === 'string' ? query.slice(0, 500) : '';
+        const q = safeQuery.toLowerCase();
 
         // 1. Handle Visual/Voice Commands (Simulation)
         if (q.includes('analyzing_image_cmd')) {
@@ -100,22 +102,31 @@ export const AiAssistantEngine = {
             const payload = {
                 contents: [{
                     parts: [{
-                        text: `${systemPrompt} User asks: ${query}`
+                        text: `${systemPrompt} User asks: ${safeQuery}`
                     }]
                 }]
             };
 
-            const response = await fetch(GEMINI_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            // Add abort controller with 10 second timeout for external API call
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-            if (response.ok) {
-                const data = await response.json();
-                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
-                    return data.candidates[0].content.parts[0].text;
+            try {
+                const response = await fetch(GEMINI_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+                        return data.candidates[0].content.parts[0].text;
+                    }
                 }
+            } finally {
+                clearTimeout(timeoutId);
             }
         } catch (error) {
             Logger.info("Offline or API Error, falling back to local DB:", error.message);
