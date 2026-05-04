@@ -82,7 +82,9 @@ export const AiAssistantEngine = {
      * @returns {Promise<string>} - AI response
      */
     ask: async (query, lang = 'en') => {
-        const q = query.toLowerCase();
+        // Defense in depth: Truncate unbounded user input to prevent DoS via excessively large payloads
+        const safeQuery = typeof query === 'string' ? query.substring(0, 500) : '';
+        const q = safeQuery.toLowerCase();
 
         // 1. Handle Visual/Voice Commands (Simulation)
         if (q.includes('analyzing_image_cmd')) {
@@ -100,16 +102,23 @@ export const AiAssistantEngine = {
             const payload = {
                 contents: [{
                     parts: [{
-                        text: `${systemPrompt} User asks: ${query}`
+                        text: `${systemPrompt} User asks: ${safeQuery}`
                     }]
                 }]
             };
 
+            // Add AbortController for external API timeout (10 seconds)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+
             const response = await fetch(GEMINI_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (response.ok) {
                 const data = await response.json();
