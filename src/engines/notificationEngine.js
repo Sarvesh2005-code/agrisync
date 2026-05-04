@@ -56,8 +56,9 @@ export const NotificationEngine = {
         }
     },
 
-    getUnreadCount: async (userCrops = []) => {
-        const recents = await NotificationEngine.getRecents(userCrops);
+    getUnreadCount: async (userCrops = [], preFetchedRecents = null) => {
+        // Bolt: Accept optional preFetchedRecents to avoid redundant AsyncStorage reads
+        const recents = preFetchedRecents || await NotificationEngine.getRecents(userCrops);
         return recents.filter(n => !n.read).length;
     },
 
