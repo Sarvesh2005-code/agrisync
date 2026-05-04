@@ -190,6 +190,7 @@ const LoginScreen = ({ onLoginSuccess }) => {
                         onChangeText={setName}
                         placeholder="Enter your full name"
                         placeholderTextColor="#999"
+                        maxLength={50}
                     />
                 </View>
             </View>
@@ -220,6 +221,7 @@ const LoginScreen = ({ onLoginSuccess }) => {
                         onChangeText={setVillage}
                         placeholder="Your location (optional)"
                         placeholderTextColor="#999"
+                        maxLength={100}
                     />
                 </View>
             </View>
