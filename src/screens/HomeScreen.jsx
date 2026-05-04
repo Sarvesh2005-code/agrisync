@@ -42,7 +42,7 @@ const HomeScreen = () => {
     useEffect(() => {
         loadData();
         loadUserProfile();
-        loadUserCrops();
+        // Bolt: Removed redundant loadUserCrops() here since loadData() already fetches and sets it.
         loadRandomTip();
     }, []);
 
@@ -108,7 +108,8 @@ const HomeScreen = () => {
         try {
             const notifs = await NotificationEngine.getRecents(crops);
             setNotifications(notifs);
-            const count = await NotificationEngine.getUnreadCount(crops);
+            // Bolt: Pass pre-fetched notifs to avoid double AsyncStorage read
+            const count = await NotificationEngine.getUnreadCount(crops, notifs);
             setUnreadCount(count);
         } catch (e) {
             Logger.error(e, 'HomeScreen Refresh Notifs');
