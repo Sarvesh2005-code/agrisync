@@ -56,8 +56,12 @@ export const NotificationEngine = {
         }
     },
 
-    getUnreadCount: async (userCrops = []) => {
-        const recents = await NotificationEngine.getRecents(userCrops);
+    getUnreadCount: async (userCrops = [], preFetchedRecents = null) => {
+        // ⚡ Bolt: Performance Optimization
+        // Why: Avoids a redundant and potentially expensive async call to NotificationEngine.getRecents()
+        // when the recents data has just been fetched by the caller.
+        // Impact: Eliminates an unnecessary `AsyncStorage.getItem` I/O operation during notification refresh.
+        const recents = preFetchedRecents || await NotificationEngine.getRecents(userCrops);
         return recents.filter(n => !n.read).length;
     },
 
