@@ -13,9 +13,12 @@ const MOCK_WEATHER = {
 export const Insight48hEngine = {
     /**
      * Generate 48-hour insights for all registered crops
+     * @param {Array} myCrops - List of user crops
+     * @param {Object} [preDetectedRegion] - Optional pre-fetched region to eliminate redundant storage reads
      */
-    generateInsights: async (myCrops) => {
-        const region = await RegionDetectionEngine.detectRegion();
+    generateInsights: async (myCrops, preDetectedRegion = null) => {
+        // Impact: Eliminates redundant `detectRegion` storage reads if region is already fetched in caller
+        const region = preDetectedRegion || await RegionDetectionEngine.detectRegion();
         const insights = [];
 
         for (const crop of myCrops) {
