@@ -59,8 +59,8 @@ const HomeScreen = () => {
             // Load user crops first
             const crops = await loadUserCrops();
 
-            // Load 48h insights based on user crops
-            const generatedInsights = await Insight48hEngine.generateInsights(crops);
+            // Load 48h insights based on user crops, passing detected region to avoid redundant storage reads
+            const generatedInsights = await Insight48hEngine.generateInsights(crops, detected);
             setAlerts(generatedInsights.slice(0, 3));
 
             await refreshNotifications(crops);
