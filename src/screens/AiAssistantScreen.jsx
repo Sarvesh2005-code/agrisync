@@ -139,7 +139,13 @@ const AiAssistantScreen = () => {
             </View>
 
             <View style={styles.inputArea}>
-                <TouchableOpacity style={styles.mediaBtn} onPress={handleCamera}>
+                <TouchableOpacity
+                    style={styles.mediaBtn}
+                    onPress={handleCamera}
+                    accessibilityRole="button"
+                    accessibilityLabel="Camera"
+                    accessibilityHint="Opens the camera to take a photo or select an image from gallery"
+                >
                     <Ionicons name="camera" size={24} color="#555" />
                 </TouchableOpacity>
                 <TextInput
@@ -151,11 +157,23 @@ const AiAssistantScreen = () => {
                     onSubmitEditing={() => sendMessage()}
                 />
                 {inputText ? (
-                    <TouchableOpacity style={styles.sendBtn} onPress={() => sendMessage()}>
+                    <TouchableOpacity
+                        style={styles.sendBtn}
+                        onPress={() => sendMessage()}
+                        accessibilityRole="button"
+                        accessibilityLabel="Send message"
+                        accessibilityHint="Sends the typed message to the AI assistant"
+                    >
                         <Ionicons name="send" size={20} color="#fff" />
                     </TouchableOpacity>
                 ) : (
-                    <TouchableOpacity style={[styles.sendBtn, styles.micBtn]} onPress={handleVoice}>
+                    <TouchableOpacity
+                        style={[styles.sendBtn, styles.micBtn]}
+                        onPress={handleVoice}
+                        accessibilityRole="button"
+                        accessibilityLabel="Voice input"
+                        accessibilityHint="Activates microphone for voice commands"
+                    >
                         <Ionicons name="mic" size={24} color="#fff" />
                     </TouchableOpacity>
                 )}
